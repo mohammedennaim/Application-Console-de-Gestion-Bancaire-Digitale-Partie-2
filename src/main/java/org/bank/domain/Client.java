@@ -1,21 +1,34 @@
 package org.bank.domain;
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.UUID;
 
 public class Client {
-    private long id;
+
+    private UUID id;
     private String username;
     private String passwordHash;
     private String fullName;
+    private String role; // Toujours "CLIENT"
+    private boolean active;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
+    private LocalDateTime lastLoginAt;
     private String nationalId;
     private BigDecimal monthlyIncome;
     private String email;
     private String phone;
     private LocalDate birthDate;
-    private String Role;
 
+    public Client() {
+        this.active = true;
+        this.role = "CLIENT";
+        this.createdAt = LocalDateTime.now();
+        this.updatedAt = this.createdAt;
+    }
 
-    public Client(long id,
+    public Client(UUID id,
                   String username,
                   String passwordHash,
                   String fullName,
@@ -24,8 +37,8 @@ public class Client {
                   String email,
                   String phone,
                   LocalDate birthDate,
-                  String Role,
                   boolean active) {
+        this();
         this.id = id;
         this.username = username;
         this.passwordHash = passwordHash;
@@ -35,14 +48,14 @@ public class Client {
         this.email = email;
         this.phone = phone;
         this.birthDate = birthDate;
-        this.Role = Role;
+        this.active = active;
     }
 
-    public long getId() {
+    public UUID getId() {
         return id;
     }
 
-    public void setId(long id) {
+    public void setId(UUID id) {
         this.id = id;
     }
 
@@ -68,6 +81,46 @@ public class Client {
 
     public void setFullName(String fullName) {
         this.fullName = fullName;
+    }
+
+    public String getRole() {
+        return role;
+    }
+
+    public void setRole(String role) {
+        this.role = role;
+    }
+
+    public boolean isActive() {
+        return active;
+    }
+
+    public void setActive(boolean active) {
+        this.active = active;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public LocalDateTime getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public void setUpdatedAt(LocalDateTime updatedAt) {
+        this.updatedAt = updatedAt;
+    }
+
+    public LocalDateTime getLastLoginAt() {
+        return lastLoginAt;
+    }
+
+    public void setLastLoginAt(LocalDateTime lastLoginAt) {
+        this.lastLoginAt = lastLoginAt;
     }
 
     public String getNationalId() {
@@ -110,11 +163,21 @@ public class Client {
         this.birthDate = birthDate;
     }
 
-    public String getRole() {
-        return Role;
-    }
-
-    public void setRole(String role) {
-        Role = role;
+    @Override
+    public String toString() {
+        return "Client{" +
+                "id=" + id +
+                ", username='" + username + '\'' +
+                ", fullName='" + fullName + '\'' +
+                ", role='" + role + '\'' +
+                ", active=" + active +
+                ", nationalId='" + nationalId + '\'' +
+                ", monthlyIncome=" + monthlyIncome +
+                ", email='" + email + '\'' +
+                ", phone='" + phone + '\'' +
+                ", birthDate=" + birthDate +
+                ", createdAt=" + createdAt +
+                ", lastLoginAt=" + lastLoginAt +
+                '}';
     }
 }

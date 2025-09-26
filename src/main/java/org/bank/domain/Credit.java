@@ -7,6 +7,7 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.UUID;
 
 
 public class Credit {
@@ -22,7 +23,7 @@ public class Credit {
     public static final MathContext MC = new MathContext(20, RoundingMode.HALF_UP);
 
     private String id; // ex: CR-2025-0001
-    private long clientId;
+    private UUID clientId;
     private String linkedAccountId; // compte débité/crédité automatiquement
     private BigDecimal principal; // capital
     private BigDecimal annualRate; // 8% => 0.08
@@ -39,7 +40,7 @@ public class Credit {
     }
 
     public Credit(String id,
-                  long clientId,
+                  UUID clientId,
                   String linkedAccountId,
                   BigDecimal principal,
                   BigDecimal annualRate,
@@ -65,7 +66,7 @@ public class Credit {
         return id;
     }
 
-    public long getClientId() {
+    public UUID getClientId() {
         return clientId;
     }
 

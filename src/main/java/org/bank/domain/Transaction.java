@@ -5,6 +5,8 @@ import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.util.Currency;
 import java.util.Objects;
+import java.util.UUID;
+import java.util.UUID;
 
 public class Transaction {
     public enum TransactionStatus {
@@ -22,17 +24,17 @@ public class Transaction {
         CREDIT_REPAYMENT
     }
 
-    private String id;
+    private UUID id;
     private TransactionType type;
     private TransactionStatus status;
 
-    private String sourceAccountId;
-    private String targetAccountId;
+    private UUID sourceAccountId;
+    private UUID targetAccountId;
     private BigDecimal amount;
     private BigDecimal fee;
     private Currency currency;
 
-    private long initiatedByUserId;
+    private UUID initiatedByUserId;
     private String externalReference;
     private String description;
 
@@ -40,15 +42,15 @@ public class Transaction {
     private LocalDateTime executedAt;
 
 
-    public Transaction(String id,
+    public Transaction(UUID id,
                        TransactionType type,
                        TransactionStatus status,
-                       String sourceAccountId,
-                       String targetAccountId,
+                       UUID sourceAccountId,
+                       UUID targetAccountId,
                        BigDecimal amount,
                        BigDecimal fee,
                        Currency currency,
-                       long initiatedByUserId,
+                       UUID initiatedByUserId,
                        String externalReference,
                        String description,
                        LocalDateTime createdAt,
@@ -68,11 +70,11 @@ public class Transaction {
         this.executedAt = executedAt;
     }
 
-    public String getId() {
+    public UUID getId() {
         return id;
     }
 
-    public void setId(String id) {
+    public void setId(UUID id) {
         this.id = id;
     }
 
@@ -92,19 +94,19 @@ public class Transaction {
         this.status = status;
     }
 
-    public String getSourceAccountId() {
+    public UUID getSourceAccountId() {
         return sourceAccountId;
     }
 
-    public void setSourceAccountId(String sourceAccountId) {
+    public void setSourceAccountId(UUID sourceAccountId) {
         this.sourceAccountId = sourceAccountId;
     }
 
-    public String getTargetAccountId() {
+    public UUID getTargetAccountId() {
         return targetAccountId;
     }
 
-    public void setTargetAccountId(String targetAccountId) {
+    public void setTargetAccountId(UUID targetAccountId) {
         this.targetAccountId = targetAccountId;
     }
 
@@ -132,11 +134,11 @@ public class Transaction {
         this.currency = currency;
     }
 
-    public long getInitiatedByUserId() {
+    public UUID getInitiatedByUserId() {
         return initiatedByUserId;
     }
 
-    public void setInitiatedByUserId(long initiatedByUserId) {
+    public void setInitiatedByUserId(UUID initiatedByUserId) {
         this.initiatedByUserId = initiatedByUserId;
     }
 

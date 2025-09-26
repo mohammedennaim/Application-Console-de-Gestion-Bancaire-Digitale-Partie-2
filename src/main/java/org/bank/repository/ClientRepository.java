@@ -1,7 +1,12 @@
 package org.bank.repository;
 
-public class ClientRepository {
+import java.util.UUID;
 
+import org.bank.domain.Client;
 
+public interface ClientRepository {
+    Client findById(UUID id);
+    boolean save(Client client);
+    boolean delete(Client client);
 }
 

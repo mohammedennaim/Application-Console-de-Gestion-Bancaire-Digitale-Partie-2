@@ -5,6 +5,7 @@ import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.util.Currency;
 import java.util.Objects;
+import java.util.UUID;
 
 public class Account {
     public enum AccountType {
@@ -12,8 +13,8 @@ public class Account {
         EPARGNE,
         CREDIT
     }
-    private String id; // ex: BK-2025-0001
-    private long clientId; // id du client (User avec rôle CLIENT)
+    private UUID id; // ex: UUID généré automatiquement
+    private UUID clientId; // id du client (User avec rôle CLIENT)  
     private AccountType type;
     private BigDecimal balance;
     private Currency currency;
@@ -22,12 +23,13 @@ public class Account {
     private boolean closed;
     private LocalDateTime openedAt;
     private LocalDateTime closedAt;
+    private LocalDateTime updatedAt;
 
     public Account() {
     }
 
-    public Account(String id,
-                   long clientId,
+    public Account(UUID id,
+                   UUID clientId,
                    AccountType type,
                    BigDecimal balance,
                    Currency currency,
@@ -42,22 +44,23 @@ public class Account {
         this.overdraftLimit = overdraftLimit == null ? BigDecimal.ZERO : overdraftLimit;
         this.openedAt = openedAt == null ? LocalDateTime.now() : openedAt;
         this.closed = false;
+        this.updatedAt = LocalDateTime.now();
         setBalance(balance == null ? BigDecimal.ZERO : balance);
     }
 
-    public String getId() {
+    public UUID getId() {
         return id;
     }
 
-    public void setId(String id) {
+    public void setId(UUID id) {
         this.id = id;
     }
 
-    public long getOwnerId() {
+    public UUID getOwnerId() {
         return clientId;
     }
 
-    public void setOwnerId(long ownerId) {
+    public void setOwnerId(UUID ownerId) {
         this.clientId = ownerId;
     }
 
@@ -106,6 +109,10 @@ public class Account {
         return closed;
     }
 
+    public void setClosed(boolean closed) {
+        this.closed = closed;
+    }
+
     public LocalDateTime getOpenedAt() {
         return openedAt;
     }
@@ -116,6 +123,18 @@ public class Account {
 
     public LocalDateTime getClosedAt() {
         return closedAt;
+    }
+
+    public void setClosedAt(LocalDateTime closedAt) {
+        this.closedAt = closedAt;
+    }
+
+    public LocalDateTime getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public void setUpdatedAt(LocalDateTime updatedAt) {
+        this.updatedAt = updatedAt;
     }
 
     public String toString() {
@@ -130,6 +149,7 @@ public class Account {
                 ", closed=" + closed +
                 ", openedAt=" + openedAt +
                 ", closedAt=" + closedAt +
+                ", updatedAt=" + updatedAt +
                 '}';
     }
 }

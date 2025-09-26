@@ -2,6 +2,7 @@ package org.bank.domain;
 
 import java.time.LocalDateTime;
 import java.util.Objects;
+import java.util.UUID;
 
 public class User {
     public enum Role {
@@ -11,7 +12,7 @@ public class User {
         MANAGER,
         CLIENT
     }
-    private long id;
+    private UUID id;
     private String username;
     private String passwordHash;
     private String fullName;
@@ -28,7 +29,7 @@ public class User {
         this.updatedAt = this.createdAt;
     }
 
-    public User(long id,
+    public User(UUID id,
                 String username,
                 String passwordHash,
                 String fullName,
@@ -67,11 +68,11 @@ public class User {
         this.lastLoginAt = LocalDateTime.now();
     }
 
-    public long getId() {
+    public UUID getId() {
         return id;
     }
 
-    public void setId(long id) {
+    public void setId(UUID id) {
         this.id = id;
     }
 

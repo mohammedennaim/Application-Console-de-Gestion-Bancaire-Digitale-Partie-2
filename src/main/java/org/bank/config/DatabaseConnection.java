@@ -12,7 +12,7 @@ public class DatabaseConnection {
     private DatabaseConnection() throws SQLException {
         try {
             Class.forName("org.postgresql.Driver");
-            String URL = "jdbc:postgresql://localhost:5432/mydb";
+            String URL = "jdbc:postgresql://localhost:5432/postgres";
             String USER = "postgres";
             String PASSWORD = "123456789";
             this.connection = DriverManager.getConnection(URL, USER, PASSWORD);

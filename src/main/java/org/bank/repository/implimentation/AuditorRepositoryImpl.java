@@ -1,4 +1,6 @@
 package org.bank.repository.implimentation;
 
-public class AuditorRepositoryImpl {
+import org.bank.repository.AuditorRepository;
+
+public class AuditorRepositoryImpl implements AuditorRepository {
 }

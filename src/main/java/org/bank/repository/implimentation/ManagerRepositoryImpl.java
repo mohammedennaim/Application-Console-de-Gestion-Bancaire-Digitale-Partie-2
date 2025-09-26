@@ -1,4 +1,6 @@
 package org.bank.repository.implimentation;
 
-public class ManagerRepositoryImpl {
+import org.bank.repository.ManagerRepository;
+
+public class ManagerRepositoryImpl implements ManagerRepository {
 }

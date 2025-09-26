@@ -58,7 +58,7 @@ public class AccountRepositoryImpl implements AccountRepository {
             id, client_id, account_type, balance, currency_code,
             overdraft_allowed, overdraft_limit, closed,
             opened_at, closed_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ) VALUES (?, ?, ?::account_type, ?, ?, ?, ?, ?, ?, ?)
         """;
 
         try (PreparedStatement ps = cnx.prepareStatement(sql)) {

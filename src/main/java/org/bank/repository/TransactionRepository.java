@@ -1,4 +1,4 @@
 package org.bank.repository;
 
-public class TransactionRepository {
+public interface TransactionRepository {
 }

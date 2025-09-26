@@ -1,4 +1,6 @@
 package org.bank.repository.implimentation;
 
-public class AdminRepositoryImpl {
+import org.bank.repository.AdminRepository;
+
+public class AdminRepositoryImpl implements AdminRepository {
 }

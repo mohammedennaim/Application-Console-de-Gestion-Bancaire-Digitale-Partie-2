@@ -1,6 +1,6 @@
 package org.bank.repository;
 
-public class AuditorRepository {
+public interface AuditorRepository {
 
 
 }

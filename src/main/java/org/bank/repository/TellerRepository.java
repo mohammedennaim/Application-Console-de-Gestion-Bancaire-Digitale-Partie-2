@@ -1,6 +1,6 @@
 package org.bank.repository;
 
-public class TellerRepository {
+public interface TellerRepository {
 
 
 }

@@ -1,4 +1,6 @@
 package org.bank.repository.implimentation;
 
-public class TellerRepositoryImpl {
+import org.bank.repository.TellerRepository;
+
+public class TellerRepositoryImpl implements TellerRepository {
 }

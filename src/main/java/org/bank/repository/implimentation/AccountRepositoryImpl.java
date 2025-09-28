@@ -19,11 +19,22 @@ public class AccountRepositoryImpl implements AccountRepository {
     }
 
 
-    public Account findById(UUID id) {
+    @Override
+    public boolean findById(UUID id) {
+        return getAccountById(id) != null;
+    }
+    
+    // Méthode utilitaire pour récupérer l'objet Account complet
+    public Account getAccountById(UUID id) {
+        if (id == null) {
+            System.err.println("Erreur: ID ne peut pas être null");
+            return null;
+        }
+        
         Connection cnx = this.connection.getConnection();
         String sql = "SELECT * FROM accounts WHERE id::text = ?";
         try (PreparedStatement ps = cnx.prepareStatement(sql)) {
-            ps.setObject(1, id.toString());
+            ps.setString(1, id.toString());
             ResultSet rs = ps.executeQuery();
 
             if (rs.next()) {
@@ -46,7 +57,7 @@ public class AccountRepositoryImpl implements AccountRepository {
             }
 
         } catch (SQLException e) {
-            System.err.println("erruer lors de recherche de ID " +  id + e.getMessage());
+            System.err.println("Erreur lors de recherche de ID " + id + ": " + e.getMessage());
         }
         return null;
     }
@@ -87,6 +98,116 @@ public class AccountRepositoryImpl implements AccountRepository {
             e.printStackTrace();
         }
         return false;
+    }
+
+    @Override
+    public boolean delete(UUID id){
+        if (id == null) {
+            System.err.println("Erreur: ID ne peut pas être null");
+            return false;
+        }
+        
+        // Vérifier que le compte existe avant de le supprimer
+        if (!findById(id)) {
+            System.out.println("Aucun compte trouvé avec l'ID: " + id);
+            return false;
+        }
+        
+        Connection cnx = this.connection.getConnection();
+        
+        try {
+            // Commencer une transaction
+            cnx.setAutoCommit(false);
+            
+            // 1. Vérifier les références dans les transactions
+            String checkTransactionsSql = "SELECT COUNT(*) FROM transactions WHERE source_account_id = ? OR target_account_id = ?";
+            int transactionCount = 0;
+            try (PreparedStatement checkPs = cnx.prepareStatement(checkTransactionsSql)) {
+                checkPs.setObject(1, id);
+                checkPs.setObject(2, id);
+                ResultSet rs = checkPs.executeQuery();
+                if (rs.next()) {
+                    transactionCount = rs.getInt(1);
+                }
+            }
+            
+            // 2. Vérifier les références dans les crédits
+            String checkCreditsSql = "SELECT COUNT(*) FROM credits WHERE linked_account_id = ?";
+            int creditCount = 0;
+            try (PreparedStatement checkPs = cnx.prepareStatement(checkCreditsSql)) {
+                checkPs.setObject(1, id);
+                ResultSet rs = checkPs.executeQuery();
+                if (rs.next()) {
+                    creditCount = rs.getInt(1);
+                }
+            }
+            
+            // Informer l'utilisateur des dépendances
+            if (transactionCount > 0) {
+                System.out.println("AVERTISSEMENT: Ce compte a " + transactionCount + " transaction(s) associée(s)");
+            }
+            if (creditCount > 0) {
+                System.out.println("AVERTISSEMENT: Ce compte a " + creditCount + " crédit(s) associé(s)");
+            }
+            
+            // 3. Supprimer les transactions liées (optionnel - comportement en cascade)
+            if (transactionCount > 0) {
+                String deleteTransactionsSql = "DELETE FROM transactions WHERE source_account_id = ? OR target_account_id = ?";
+                try (PreparedStatement deleteTransPs = cnx.prepareStatement(deleteTransactionsSql)) {
+                    deleteTransPs.setObject(1, id);
+                    deleteTransPs.setObject(2, id);
+                    int deletedTransactions = deleteTransPs.executeUpdate();
+                    System.out.println("→ " + deletedTransactions + " transaction(s) supprimée(s)");
+                }
+            }
+            
+            // 4. Supprimer les crédits liés
+            if (creditCount > 0) {
+                String deleteCreditsSql = "DELETE FROM credits WHERE linked_account_id = ?";
+                try (PreparedStatement deleteCreditPs = cnx.prepareStatement(deleteCreditsSql)) {
+                    deleteCreditPs.setObject(1, id);
+                    int deletedCredits = deleteCreditPs.executeUpdate();
+                    System.out.println("→ " + deletedCredits + " crédit(s) supprimé(s)");
+                }
+            }
+            
+            // 5. Supprimer le compte principal
+            String deleteAccountSql = "DELETE FROM accounts WHERE id = ?";
+            try (PreparedStatement deleteAccountPs = cnx.prepareStatement(deleteAccountSql)) {
+                deleteAccountPs.setObject(1, id);
+                int rowsAffected = deleteAccountPs.executeUpdate();
+                
+                if (rowsAffected > 0) {
+                    // Valider la transaction
+                    cnx.commit();
+                    System.out.println("✅ Compte et toutes ses dépendances supprimés avec succès: " + id);
+                    return true;
+                } else {
+                    // Annuler la transaction
+                    cnx.rollback();
+                    System.out.println("❌ Échec de la suppression du compte");
+                    return false;
+                }
+            }
+            
+        } catch (SQLException e) {
+            // Annuler la transaction en cas d'erreur
+            try {
+                cnx.rollback();
+            } catch (SQLException rollbackEx) {
+                System.err.println("Erreur lors du rollback: " + rollbackEx.getMessage());
+            }
+            System.err.println("Erreur lors de la suppression du compte: " + e.getMessage());
+            e.printStackTrace();
+            return false;
+        } finally {
+            // Restaurer l'auto-commit
+            try {
+                cnx.setAutoCommit(true);
+            } catch (SQLException e) {
+                System.err.println("Erreur lors de la restauration de l'auto-commit: " + e.getMessage());
+            }
+        }
     }
 
 }

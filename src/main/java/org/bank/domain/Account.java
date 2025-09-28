@@ -13,13 +13,14 @@ public class Account {
         EPARGNE,
         CREDIT
     }
-    private UUID id; // ex: UUID généré automatiquement
-    private UUID clientId; // id du client (User avec rôle CLIENT)  
+    private UUID id;
+    private UUID clientId;
+    private String bankCode;
     private AccountType type;
     private BigDecimal balance;
     private Currency currency;
     private boolean overdraftAllowed;
-    private BigDecimal overdraftLimit; // ex: 1000.00 (si overdraftAllowed = true)
+    private BigDecimal overdraftLimit;
     private boolean closed;
     private LocalDateTime openedAt;
     private LocalDateTime closedAt;
@@ -30,6 +31,7 @@ public class Account {
 
     public Account(UUID id,
                    UUID clientId,
+                   String bankCode,
                    AccountType type,
                    BigDecimal balance,
                    Currency currency,
@@ -38,6 +40,7 @@ public class Account {
                    LocalDateTime openedAt) {
         this.id = Objects.requireNonNull(id, "id");
         this.clientId = clientId;
+        this.bankCode = bankCode;
         this.type = Objects.requireNonNull(type, "type");
         this.currency = Objects.requireNonNull(currency, "currency");
         this.overdraftAllowed = overdraftAllowed;
@@ -60,9 +63,11 @@ public class Account {
         return clientId;
     }
 
-    public void setOwnerId(UUID ownerId) {
-        this.clientId = ownerId;
-    }
+    public void setOwnerId(UUID ownerId) { this.clientId = ownerId; }
+
+    public String getBankCode() { return bankCode; }
+
+    public void setBankCode(String bankCode) { this.bankCode = bankCode; }
 
     public AccountType getType() {
         return type;
@@ -141,6 +146,7 @@ public class Account {
         return "Account{" +
                 "id='" + id + '\'' +
                 ", clientId=" + clientId +
+                ",bankCode=" + bankCode +
                 ", type=" + type +
                 ", balance=" + balance +
                 ", currency=" + currency +

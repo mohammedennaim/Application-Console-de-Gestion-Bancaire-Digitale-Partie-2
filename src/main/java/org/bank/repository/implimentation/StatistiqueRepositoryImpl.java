@@ -2,5 +2,5 @@ package org.bank.repository.implimentation;
 
 import org.bank.repository.TransactionRepository;
 
-public class StatistiqueRepositoryImpl implements TransactionRepository {
+public class StatistiqueRepositoryImpl{
 }

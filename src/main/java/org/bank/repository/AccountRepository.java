@@ -5,6 +5,7 @@ import java.util.UUID;
 
 public interface AccountRepository {
     boolean save(Account account);
-    Account findById(UUID id);
+    boolean findById(UUID id);
+    boolean delete(UUID id);
 }
 

@@ -8,7 +8,6 @@ public class Client {
 
     private UUID id;
     private String username;
-    private String passwordHash;
     private String fullName;
     private String role; // Toujours "CLIENT"
     private boolean active;
@@ -30,7 +29,6 @@ public class Client {
 
     public Client(UUID id,
                   String username,
-                  String passwordHash,
                   String fullName,
                   String nationalId,
                   BigDecimal monthlyIncome,
@@ -41,7 +39,6 @@ public class Client {
         this();
         this.id = id;
         this.username = username;
-        this.passwordHash = passwordHash;
         this.fullName = fullName;
         this.nationalId = nationalId;
         this.monthlyIncome = monthlyIncome;
@@ -65,14 +62,6 @@ public class Client {
 
     public void setUsername(String username) {
         this.username = username;
-    }
-
-    public String getPasswordHash() {
-        return passwordHash;
-    }
-
-    public void setPasswordHash(String passwordHash) {
-        this.passwordHash = passwordHash;
     }
 
     public String getFullName() {

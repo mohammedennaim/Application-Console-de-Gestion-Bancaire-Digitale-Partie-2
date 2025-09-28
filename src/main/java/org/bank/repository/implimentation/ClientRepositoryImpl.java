@@ -17,7 +17,7 @@ public class ClientRepositoryImpl implements ClientRepository {
         this.connection = DatabaseConnection.getInstance();
     }
 
-    public Client findById(UUID id) {
+    public boolean findById(UUID id) {
         Connection cnx = this.connection.getConnection();
         String sql = "SELECT * FROM clients WHERE id = ?";
         try (PreparedStatement ps = cnx.prepareStatement(sql)) {
@@ -26,10 +26,8 @@ public class ClientRepositoryImpl implements ClientRepository {
 
             if (rs.next()) {
                 Client client = new Client();
-                // Mapping tous les champs de la table clients
                 client.setId((UUID) rs.getObject("id"));
                 client.setUsername(rs.getString("username"));
-                client.setPasswordHash(rs.getString("password_hash"));
                 client.setFullName(rs.getString("full_name"));
                 client.setRole(rs.getString("role"));
                 client.setActive(rs.getBoolean("active"));
@@ -48,29 +46,28 @@ public class ClientRepositoryImpl implements ClientRepository {
                 client.setBirthDate(rs.getDate("birth_date") != null ? 
                     rs.getDate("birth_date").toLocalDate() : null);
                 
-                return client;
+                return true;
             }
 
         } catch (SQLException e) {
-            e.printStackTrace();
+            System.out.println(e.getMessage());
         }
-        return null;
+        return false;
     }
 
     public boolean save(Client client) {
         Connection cnx = this.connection.getConnection();
         String sql = """
         INSERT INTO clients (
-            id, username, password_hash, full_name, role, active,
+            id, username, full_name, role, active,
             created_at, updated_at, last_login_at,
             national_id, monthly_income, email, phone, birth_date
-        ) VALUES (?, ?, ?, ?, ?::user_role, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ) VALUES (?, ?, ?, ?::user_role, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """;
 
         try (PreparedStatement ps = cnx.prepareStatement(sql)) {
             ps.setObject(1, client.getId());
             ps.setString(2, client.getUsername());
-            ps.setString(3, client.getPasswordHash());
             ps.setString(4, client.getFullName());
             ps.setString(5, client.getRole());
             ps.setBoolean(6, client.isActive());
@@ -87,25 +84,9 @@ public class ClientRepositoryImpl implements ClientRepository {
             System.out.println("Client inséré avec succès : " + client.getId());
             return true;
         } catch (SQLException e) {
-            e.printStackTrace();
+            System.out.println(e.getMessage());
         }
         return false;
     }
-    public boolean delete(Client client){
-        if (client == null || client.getId() == null) {
-            System.out.println("Client ou ID client invalide");
-            return false;
-        }
-        Connection cnx = this.connection.getConnection();
-        String sql = "DELETE FROM clients WHERE id = ?;";
-        try(PreparedStatement ps = cnx.prepareStatement(sql)) {
-            ps.setObject(1, client.getId());
-            ps.executeUpdate();
-            System.out.println("Client et données associées supprimés avec succès");
-            return true;
-        }catch (Exception e){
-            System.out.println(e.getStackTrace());
-        }
-        return false;
-    }
+
 }

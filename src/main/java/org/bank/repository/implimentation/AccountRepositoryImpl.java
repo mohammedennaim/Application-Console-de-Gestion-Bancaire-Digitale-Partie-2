@@ -17,12 +17,6 @@ public class AccountRepositoryImpl implements AccountRepository {
     public AccountRepositoryImpl() throws SQLException {
         this.connection = DatabaseConnection.getInstance();
     }
-
-
-    @Override
-    public boolean findById(UUID id) {
-        return getAccountById(id) != null;
-    }
     
     public Account getAccountById(UUID id) {
         if (id == null) {
@@ -31,7 +25,7 @@ public class AccountRepositoryImpl implements AccountRepository {
         }
         
         Connection cnx = this.connection.getConnection();
-        String sql = "SELECT * FROM accounts WHERE id::text = ?";
+        String sql = "SELECT * FROM accounts WHERE id::text = ? AND (deleted = false OR deleted IS NULL)";
         try (PreparedStatement ps = cnx.prepareStatement(sql)) {
             ps.setString(1, id.toString());
             ResultSet rs = ps.executeQuery();
@@ -60,7 +54,11 @@ public class AccountRepositoryImpl implements AccountRepository {
         }
         return null;
     }
-    @Override
+    
+    public boolean findById(UUID id) {
+        return getAccountById(id) != null;
+    }
+
     public boolean save(Account account) {
         Connection cnx = this.connection.getConnection();
         String sql = """
@@ -99,14 +97,12 @@ public class AccountRepositoryImpl implements AccountRepository {
         return false;
     }
 
-    @Override
     public boolean delete(UUID id){
         if (id == null) {
             System.err.println("Erreur: ID ne peut pas être null");
             return false;
         }
         
-        // Vérifier que le compte existe avant de le supprimer
         if (!findById(id)) {
             System.out.println("Aucun compte trouvé avec l'ID: " + id);
             return false;
@@ -115,95 +111,68 @@ public class AccountRepositoryImpl implements AccountRepository {
         Connection cnx = this.connection.getConnection();
         
         try {
-            cnx.setAutoCommit(false);
+            String softDeleteSql = """
+            UPDATE accounts 
+            SET deleted = true, 
+                deleted_at = CURRENT_TIMESTAMP,
+                updated_at = CURRENT_TIMESTAMP
+            WHERE id = ?::uuid AND deleted = false
+            """;
             
-            String checkTransactionsSql = "SELECT COUNT(*) FROM transactions WHERE source_account_id = ? OR target_account_id = ?";
-            int transactionCount = 0;
-            try (PreparedStatement checkPs = cnx.prepareStatement(checkTransactionsSql)) {
-                checkPs.setObject(1, id);
-                checkPs.setObject(2, id);
-                ResultSet rs = checkPs.executeQuery();
-                if (rs.next()) {
-                    transactionCount = rs.getInt(1);
-                }
-            }
-            
-            String checkCreditsSql = "SELECT COUNT(*) FROM credits WHERE linked_account_id = ?";
-            int creditCount = 0;
-            try (PreparedStatement checkPs = cnx.prepareStatement(checkCreditsSql)) {
-                checkPs.setObject(1, id);
-                ResultSet rs = checkPs.executeQuery();
-                if (rs.next()) {
-                    creditCount = rs.getInt(1);
-                }
-            }
-            
-            // Informer l'utilisateur des dépendances
-            if (transactionCount > 0) {
-                System.out.println("AVERTISSEMENT: Ce compte a " + transactionCount + " transaction(s) associée(s)");
-            }
-            if (creditCount > 0) {
-                System.out.println("AVERTISSEMENT: Ce compte a " + creditCount + " crédit(s) associé(s)");
-            }
-            
-            // 3. Supprimer les transactions liées (optionnel - comportement en cascade)
-            if (transactionCount > 0) {
-                String deleteTransactionsSql = "DELETE FROM transactions WHERE source_account_id = ? OR target_account_id = ?";
-                try (PreparedStatement deleteTransPs = cnx.prepareStatement(deleteTransactionsSql)) {
-                    deleteTransPs.setObject(1, id);
-                    deleteTransPs.setObject(2, id);
-                    int deletedTransactions = deleteTransPs.executeUpdate();
-                    System.out.println("→ " + deletedTransactions + " transaction(s) supprimée(s)");
-                }
-            }
-            
-            // 4. Supprimer les crédits liés
-            if (creditCount > 0) {
-                String deleteCreditsSql = "DELETE FROM credits WHERE linked_account_id = ?";
-                try (PreparedStatement deleteCreditPs = cnx.prepareStatement(deleteCreditsSql)) {
-                    deleteCreditPs.setObject(1, id);
-                    int deletedCredits = deleteCreditPs.executeUpdate();
-                    System.out.println("→ " + deletedCredits + " crédit(s) supprimé(s)");
-                }
-            }
-            
-            // 5. Supprimer le compte principal
-            String deleteAccountSql = "DELETE FROM accounts WHERE id = ?";
-            try (PreparedStatement deleteAccountPs = cnx.prepareStatement(deleteAccountSql)) {
-                deleteAccountPs.setObject(1, id);
-                int rowsAffected = deleteAccountPs.executeUpdate();
+            try (PreparedStatement ps = cnx.prepareStatement(softDeleteSql)) {
+                ps.setString(1, id.toString());
+                int rowsAffected = ps.executeUpdate();
                 
                 if (rowsAffected > 0) {
-                    // Valider la transaction
-                    cnx.commit();
-                    System.out.println("✅ Compte et toutes ses dépendances supprimés avec succès: " + id);
+                    System.out.println("✅ Compte marqué comme supprimé (soft delete) : " + id);
+                    System.out.println("   → Les données sont préservées pour l'historique");
                     return true;
                 } else {
-                    // Annuler la transaction
-                    cnx.rollback();
-                    System.out.println("❌ Échec de la suppression du compte");
+                    System.out.println("⚠️ Le compte est déjà marqué comme supprimé : " + id);
                     return false;
                 }
             }
             
         } catch (SQLException e) {
-            // Annuler la transaction en cas d'erreur
-            try {
-                cnx.rollback();
-            } catch (SQLException rollbackEx) {
-                System.err.println("Erreur lors du rollback: " + rollbackEx.getMessage());
-            }
             System.err.println("Erreur lors de la suppression du compte: " + e.getMessage());
-            e.printStackTrace();
             return false;
-        } finally {
-            // Restaurer l'auto-commit
-            try {
-                cnx.setAutoCommit(true);
-            } catch (SQLException e) {
-                System.err.println("Erreur lors de la restauration de l'auto-commit: " + e.getMessage());
-            }
         }
     }
 
+    public boolean restore(UUID id) {
+        if (id == null) {
+            System.err.println("Erreur: ID ne peut pas être null");
+            return false;
+        }
+        
+        Connection cnx = this.connection.getConnection();
+        
+        try {
+            String restoreSql = """
+            UPDATE accounts 
+            SET deleted = false, 
+                deleted_at = NULL,
+                updated_at = CURRENT_TIMESTAMP
+            WHERE id = ?::uuid AND deleted = true
+            """;
+            
+            try (PreparedStatement ps = cnx.prepareStatement(restoreSql)) {
+                ps.setString(1, id.toString());
+                int rowsAffected = ps.executeUpdate();
+                
+                if (rowsAffected > 0) {
+                    System.out.println("Compte restauré avec succès");
+                    return true;
+                } else {
+                    System.out.println("Aucun compte supprimé trouvé avec l'ID: " + id);
+                    return false;
+                }
+            }
+            
+        } catch (SQLException e) {
+            System.err.println("Erreur lors de la restauration du compte: " + e.getMessage());
+            return false;
+        }
+    }
+    
 }

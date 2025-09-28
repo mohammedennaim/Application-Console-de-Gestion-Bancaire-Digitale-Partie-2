@@ -6,11 +6,14 @@ import org.bank.repository.TransactionRepository;
 
 import java.math.BigDecimal;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.sql.Types;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Currency;
+import java.util.List;
 import java.util.UUID;
 
 public class TransactionRepositoryImpl implements TransactionRepository {
@@ -81,4 +84,36 @@ public class TransactionRepositoryImpl implements TransactionRepository {
     public boolean retirer(){return false;};
     public boolean transferIn(){return false;};
     public boolean transferOut(){return false;};
+
+    public boolean delete(UUID transactionId) {
+        String sql = "UPDATE transactions SET deleted = true, deleted_at = ? WHERE id = ?::uuid AND deleted = false";
+        
+        try (PreparedStatement ps = cnx.getConnection().prepareStatement(sql)) {
+            ps.setTimestamp(1, Timestamp.valueOf(LocalDateTime.now()));
+            ps.setString(2, transactionId.toString());
+            
+            int rowsAffected = ps.executeUpdate();
+            return rowsAffected > 0;
+            
+        } catch (SQLException e) {
+            System.err.println("Erreur lors de la suppression logique de la transaction: " + e.getMessage());
+            return false;
+        }
+    }
+
+    public boolean restore(UUID transactionId) {
+        String sql = "UPDATE transactions SET deleted = false, deleted_at = null WHERE id = ?::uuid AND deleted = true";
+        
+        try (PreparedStatement ps = cnx.getConnection().prepareStatement(sql)) {
+            ps.setString(1, transactionId.toString());
+            
+            int rowsAffected = ps.executeUpdate();
+            return rowsAffected > 0;
+            
+        } catch (SQLException e) {
+            System.err.println("Erreur lors de la restauration de la transaction: " + e.getMessage());
+            return false;
+        }
+    }
+
 }

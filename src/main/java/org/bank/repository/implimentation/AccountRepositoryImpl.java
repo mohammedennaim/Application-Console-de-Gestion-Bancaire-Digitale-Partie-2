@@ -24,7 +24,6 @@ public class AccountRepositoryImpl implements AccountRepository {
         return getAccountById(id) != null;
     }
     
-    // Méthode utilitaire pour récupérer l'objet Account complet
     public Account getAccountById(UUID id) {
         if (id == null) {
             System.err.println("Erreur: ID ne peut pas être null");
@@ -116,10 +115,8 @@ public class AccountRepositoryImpl implements AccountRepository {
         Connection cnx = this.connection.getConnection();
         
         try {
-            // Commencer une transaction
             cnx.setAutoCommit(false);
             
-            // 1. Vérifier les références dans les transactions
             String checkTransactionsSql = "SELECT COUNT(*) FROM transactions WHERE source_account_id = ? OR target_account_id = ?";
             int transactionCount = 0;
             try (PreparedStatement checkPs = cnx.prepareStatement(checkTransactionsSql)) {
@@ -131,7 +128,6 @@ public class AccountRepositoryImpl implements AccountRepository {
                 }
             }
             
-            // 2. Vérifier les références dans les crédits
             String checkCreditsSql = "SELECT COUNT(*) FROM credits WHERE linked_account_id = ?";
             int creditCount = 0;
             try (PreparedStatement checkPs = cnx.prepareStatement(checkCreditsSql)) {

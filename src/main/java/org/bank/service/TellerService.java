@@ -13,14 +13,14 @@ public class TellerService {
     public TellerService() throws SQLException {
 
     }
-    public boolean createClient(Client client){
+    public void createClient(Client client){
         if (!clientImpl.findById(UUID.fromString(client.getId().toString()))){
-            System.out.println("cette client il deja exist");
-            return false;
+            clientImpl.save(client);
+            System.out.println("Creation de client is success");
+            return;
         }
-        clientImpl.save(client);
-        System.out.println("Creation de client is success");
-        return true;
+
+        System.out.println("cette client il deja exist");
     }
 
     public boolean createAccount(Account account){

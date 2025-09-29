@@ -2,6 +2,7 @@ package org.bank.repository.implimentation;
 
 import org.bank.config.DatabaseConnection;
 import org.bank.domain.Client;
+import org.bank.domain.Currency;
 import org.bank.repository.ClientRepository;
 
 import java.sql.Connection;
@@ -20,7 +21,7 @@ public class ClientRepositoryImpl implements ClientRepository {
     public boolean findById(UUID id) {
         Connection cnx = this.connection.getConnection();
         String sql = """
-        SELECT u.*, c.national_id, c.monthly_income, c.email, c.phone, c.birth_date 
+        SELECT u.*, c.national_id, c.monthly_income, c.email, c.phone, c.birth_date, c.currency_code 
         FROM users u 
         LEFT JOIN clients c ON u.id = c.id 
         WHERE u.id = ?::uuid AND u.role = 'CLIENT'
@@ -46,6 +47,7 @@ public class ClientRepositoryImpl implements ClientRepository {
                 // Champs spécifiques aux clients
                 client.setNationalId(rs.getString("national_id"));
                 client.setMonthlyIncome(rs.getBigDecimal("monthly_income"));
+                client.setCurrency(Currency.fromCode(rs.getString("currency_code")));
                 client.setEmail(rs.getString("email"));
                 client.setPhone(rs.getString("phone"));
                 client.setBirthDate(rs.getDate("birth_date") != null ? 
@@ -91,8 +93,8 @@ public class ClientRepositoryImpl implements ClientRepository {
             INSERT INTO clients (
                 id, username, full_name, role, active,
                 created_at, updated_at, last_login_at,
-                national_id, monthly_income, email, phone, birth_date
-            ) VALUES (?::uuid, ?, ?, ?::user_role, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                national_id, monthly_income, currency_code, email, phone, birth_date
+            ) VALUES (?::uuid, ?, ?, ?::user_role, ?, ?, ?, ?, ?, ?, ?::currency_enum, ?, ?, ?)
             """;
             
             try (PreparedStatement psClients = cnx.prepareStatement(sqlClients)) {
@@ -106,9 +108,10 @@ public class ClientRepositoryImpl implements ClientRepository {
                 psClients.setObject(8, client.getLastLoginAt());
                 psClients.setString(9, client.getNationalId());
                 psClients.setBigDecimal(10, client.getMonthlyIncome());
-                psClients.setString(11, client.getEmail());
-                psClients.setString(12, client.getPhone());
-                psClients.setObject(13, client.getBirthDate());
+                psClients.setString(11, client.getCurrency() != null ? client.getCurrency().getCode() : "MAD");
+                psClients.setString(12, client.getEmail());
+                psClients.setString(13, client.getPhone());
+                psClients.setObject(14, client.getBirthDate());
                 
                 psClients.executeUpdate();
                 System.out.println("Données client insérées : " + client.getId());
@@ -122,6 +125,81 @@ public class ClientRepositoryImpl implements ClientRepository {
            e.printStackTrace();
         }
         return false;
+    }
+
+    /**
+     * Récupère le nationalId d'un client par son ID
+     * @param clientId ID du client
+     * @return le nationalId ou null si non trouvé
+     */
+    @Override
+    public String getNationalIdByClientId(UUID clientId) {
+        Connection cnx = this.connection.getConnection();
+        String sql = "SELECT national_id FROM clients WHERE id = ?::uuid";
+        
+        try (PreparedStatement ps = cnx.prepareStatement(sql)) {
+            ps.setString(1, clientId.toString());
+            ResultSet rs = ps.executeQuery();
+            
+            if (rs.next()) {
+                return rs.getString("national_id");
+            }
+            
+        } catch (SQLException e) {
+            System.err.println("Erreur lors de la récupération du nationalId: " + e.getMessage());
+        }
+        return null;
+    }
+
+    /**
+     * Récupère un client complet par son ID
+     * @param clientId ID du client
+     * @return l'objet Client ou null si non trouvé
+     */
+    @Override
+    public Client getClientById(UUID clientId) {
+        Connection cnx = this.connection.getConnection();
+        String sql = """
+        SELECT u.*, c.national_id, c.monthly_income, c.email, c.phone, c.birth_date, c.currency_code 
+        FROM users u 
+        LEFT JOIN clients c ON u.id = c.id 
+        WHERE u.id = ?::uuid AND u.role = 'CLIENT'
+        """;
+        
+        try (PreparedStatement ps = cnx.prepareStatement(sql)) {
+            ps.setString(1, clientId.toString());
+            ResultSet rs = ps.executeQuery();
+
+            if (rs.next()) {
+                Client client = new Client();
+                client.setId((UUID) rs.getObject("id"));
+                client.setUsername(rs.getString("username"));
+                client.setFullName(rs.getString("full_name"));
+                client.setRole(rs.getString("role"));
+                client.setActive(rs.getBoolean("active"));
+                client.setCreatedAt(rs.getTimestamp("created_at") != null ? 
+                    rs.getTimestamp("created_at").toLocalDateTime() : null);
+                client.setUpdatedAt(rs.getTimestamp("updated_at") != null ? 
+                    rs.getTimestamp("updated_at").toLocalDateTime() : null);
+                client.setLastLoginAt(rs.getTimestamp("last_login_at") != null ? 
+                    rs.getTimestamp("last_login_at").toLocalDateTime() : null);
+                
+                // Champs spécifiques aux clients
+                client.setNationalId(rs.getString("national_id"));
+                client.setMonthlyIncome(rs.getBigDecimal("monthly_income"));
+                client.setCurrency(Currency.fromCode(rs.getString("currency_code")));
+                client.setEmail(rs.getString("email"));
+                client.setPhone(rs.getString("phone"));
+                client.setBirthDate(rs.getDate("birth_date") != null ? 
+                    rs.getDate("birth_date").toLocalDate() : null);
+                
+                return client;
+            }
+
+        } catch (SQLException e) {
+            System.err.println("Erreur lors de la récupération du client: " + e.getMessage());
+        }
+        return null;
     }
 
 }

@@ -3,12 +3,12 @@ package org.bank.repository;
 import org.bank.domain.Transaction;
 
 import java.math.BigDecimal;
-import java.util.Currency;
+import org.bank.domain.Currency;
 import java.util.UUID;
 
 public interface TransactionRepository {
 
-    public boolean ajouter(UUID transactionId,
+    boolean transfer(UUID transactionId,
                            Transaction.TransactionType transactionType,
                            Transaction.TransactionStatus transactionStatus,
                            UUID sourceAccountId,
@@ -18,8 +18,20 @@ public interface TransactionRepository {
                            Currency currency,
                            UUID initiatedByUserId,
                            String externalReference,
-                           String description);
-    public boolean retirer();
-    public boolean transferIn();
-    public boolean transferOut();
+                           String description
+    );
+
+    boolean transferExterne(
+            UUID transactionId,
+            Transaction.TransactionType transactionType,
+            Transaction.TransactionStatus transactionStatus,
+            UUID sourceAccountId,
+            UUID targetAccountId,
+            BigDecimal amount,
+            BigDecimal fee,
+            Currency currency,
+            UUID initiatedByUserId,
+            String externalReference,
+            String description
+    );
 }

@@ -1,6 +1,7 @@
 package org.bank.ui;
 
 import org.bank.domain.Client;
+import org.bank.domain.Currency;
 import org.bank.service.TellerService;
 
 import java.math.BigDecimal;
@@ -32,7 +33,7 @@ public class UiTeller {
                 
                 switch (choix) {
                     case 1:
-                        creerClient();
+                        creeClient();
                         break;
                     case 2:
                         System.out.println("Création de compte - À implémenter");
@@ -50,7 +51,7 @@ public class UiTeller {
         }
     }
     
-    private void creerClient() {
+    private void creeClient() {
         System.out.println("\n=== CRÉATION D'UN NOUVEAU CLIENT ===");
         
         try {
@@ -119,7 +120,7 @@ public class UiTeller {
             LocalDateTime createdAt = LocalDateTime.now();
             LocalDateTime updatedAt = LocalDateTime.now();
 
-            Client client = new Client(UUID.randomUUID(), username, fullName, nationalId, monthlyIncome, email, phone, birthDate, active);
+            Client client = new Client(UUID.randomUUID(), username, fullName, nationalId, monthlyIncome, Currency.MAD, email, phone, birthDate, active);
             client.setCreatedAt(createdAt);
             client.setUpdatedAt(updatedAt);
             client.setRole("CLIENT");

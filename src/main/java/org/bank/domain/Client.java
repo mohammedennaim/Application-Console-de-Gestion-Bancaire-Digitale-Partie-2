@@ -16,6 +16,7 @@ public class Client {
     private LocalDateTime lastLoginAt;
     private String nationalId;
     private BigDecimal monthlyIncome;
+    private Currency currency;
     private String email;
     private String phone;
     private LocalDate birthDate;
@@ -23,6 +24,7 @@ public class Client {
     public Client() {
         this.active = true;
         this.role = "CLIENT";
+        this.currency = Currency.MAD; // Devise par défaut: Dirham marocain
         this.createdAt = LocalDateTime.now();
         this.updatedAt = this.createdAt;
     }
@@ -32,6 +34,7 @@ public class Client {
                   String fullName,
                   String nationalId,
                   BigDecimal monthlyIncome,
+                  Currency currency,
                   String email,
                   String phone,
                   LocalDate birthDate,
@@ -42,6 +45,7 @@ public class Client {
         this.fullName = fullName;
         this.nationalId = nationalId;
         this.monthlyIncome = monthlyIncome;
+        this.currency = currency;
         this.email = email;
         this.phone = phone;
         this.birthDate = birthDate;
@@ -128,6 +132,14 @@ public class Client {
         this.monthlyIncome = monthlyIncome;
     }
 
+    public Currency getCurrency() {
+        return currency;
+    }
+
+    public void setCurrency(Currency currency) {
+        this.currency = currency;
+    }
+
     public String getEmail() {
         return email;
     }
@@ -162,6 +174,7 @@ public class Client {
                 ", active=" + active +
                 ", nationalId='" + nationalId + '\'' +
                 ", monthlyIncome=" + monthlyIncome +
+                ", currency=" + (currency != null ? currency.getCode() : "null") +
                 ", email='" + email + '\'' +
                 ", phone='" + phone + '\'' +
                 ", birthDate=" + birthDate +

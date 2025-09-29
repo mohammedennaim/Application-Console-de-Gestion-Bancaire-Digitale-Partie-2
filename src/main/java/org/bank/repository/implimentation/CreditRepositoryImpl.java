@@ -4,12 +4,9 @@ import org.bank.config.DatabaseConnection;
 import org.bank.repository.CreditRepository;
 
 import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.UUID;
 
 public class CreditRepositoryImpl implements CreditRepository {

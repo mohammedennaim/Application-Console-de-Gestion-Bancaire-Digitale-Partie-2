@@ -3,9 +3,9 @@ package org.bank.domain;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
-import java.util.Currency;
 import java.util.Objects;
 import java.util.UUID;
+import org.bank.domain.Currency;
 
 public class Account {
     public enum AccountType {

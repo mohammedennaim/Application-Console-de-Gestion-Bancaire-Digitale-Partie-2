@@ -4,8 +4,6 @@ import org.bank.domain.Account;
 import org.bank.domain.Client;
 import org.bank.domain.Currency;
 import org.bank.domain.Transaction;
-import org.bank.repository.implimentation.AccountRepositoryImpl;
-import org.bank.repository.implimentation.ClientRepositoryImpl;
 import org.bank.repository.implimentation.TellerRepositoryImpl;
 
 import java.math.BigDecimal;
@@ -60,15 +58,11 @@ public class TellerService {
                                      UUID sourceAccountId,
                                      UUID targetAccountId,
                                      BigDecimal amount,
-                                     BigDecimal fee,
                                      Currency currency,
                                      UUID initiatedByUserId,
                                      String externalReference,
                                      String description){
         return  transactionService.transferExterne(transactionId,transactionType,transactionStatus,sourceAccountId,
-                targetAccountId,amount, amount.multiply(BigDecimal.valueOf(0.5)),currency,initiatedByUserId,externalReference,description);
+                targetAccountId,amount, BigDecimal.valueOf(15.00),currency,initiatedByUserId,externalReference,description);
     }
-
-
-
 }

@@ -12,13 +12,11 @@ public class FeeRule {
     private long id;
     private OperationType operationType;
     private Mode mode;
-    private BigDecimal value; // montant fixe ou pourcentage (0.5% => 0.005)
+    private BigDecimal value;
     private Currency currency;
     private boolean active;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
-
-    public FeeRule() {}
 
     public FeeRule(long id,
                    OperationType operationType,

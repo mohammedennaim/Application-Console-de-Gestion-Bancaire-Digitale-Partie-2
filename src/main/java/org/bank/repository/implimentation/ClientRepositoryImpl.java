@@ -19,14 +19,14 @@ public class ClientRepositoryImpl implements ClientRepository {
     }
 
     public boolean findById(UUID id) {
-        Connection cnx = this.connection.getConnection();
         String sql = """
         SELECT u.*, c.national_id, c.monthly_income, c.email, c.phone, c.birth_date, c.currency_code 
         FROM users u 
         LEFT JOIN clients c ON u.id = c.id 
         WHERE u.id = ?::uuid AND u.role = 'CLIENT'
         """;
-        try (PreparedStatement ps = cnx.prepareStatement(sql)) {
+        try (Connection cnx = this.connection.getConnection();
+             PreparedStatement ps = cnx.prepareStatement(sql)) {
             ps.setString(1, id.toString());
             ResultSet rs = ps.executeQuery();
 
@@ -63,9 +63,7 @@ public class ClientRepositoryImpl implements ClientRepository {
     }
 
     public boolean save(Client client) {
-        Connection cnx = this.connection.getConnection();
-        
-        try {
+        try (Connection cnx = this.connection.getConnection()) {
             
             String sqlUsers = """
             INSERT INTO users (
@@ -134,10 +132,10 @@ public class ClientRepositoryImpl implements ClientRepository {
      */
     @Override
     public String getNationalIdByClientId(UUID clientId) {
-        Connection cnx = this.connection.getConnection();
         String sql = "SELECT national_id FROM clients WHERE id = ?::uuid";
         
-        try (PreparedStatement ps = cnx.prepareStatement(sql)) {
+        try (Connection cnx = this.connection.getConnection();
+             PreparedStatement ps = cnx.prepareStatement(sql)) {
             ps.setString(1, clientId.toString());
             ResultSet rs = ps.executeQuery();
             
@@ -158,7 +156,6 @@ public class ClientRepositoryImpl implements ClientRepository {
      */
     @Override
     public Client getClientById(UUID clientId) {
-        Connection cnx = this.connection.getConnection();
         String sql = """
         SELECT u.*, c.national_id, c.monthly_income, c.email, c.phone, c.birth_date, c.currency_code 
         FROM users u 
@@ -166,7 +163,8 @@ public class ClientRepositoryImpl implements ClientRepository {
         WHERE u.id = ?::uuid AND u.role = 'CLIENT'
         """;
         
-        try (PreparedStatement ps = cnx.prepareStatement(sql)) {
+        try (Connection cnx = this.connection.getConnection();
+             PreparedStatement ps = cnx.prepareStatement(sql)) {
             ps.setString(1, clientId.toString());
             ResultSet rs = ps.executeQuery();
 

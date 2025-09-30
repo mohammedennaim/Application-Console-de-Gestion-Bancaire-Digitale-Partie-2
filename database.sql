@@ -74,10 +74,7 @@ CREATE TYPE public.transaction_status AS ENUM (
 );
 
 CREATE TYPE public.transaction_type AS ENUM (
-    'DEPOSIT',
-    'WITHDRAW',
-    'TRANSFER_IN',
-    'TRANSFER_OUT',
+    'TRANSFER',
     'TRANSFER_EXTERNAL'
 );
 

@@ -6,22 +6,14 @@ import java.time.LocalDateTime;
 import java.util.Currency;
 import java.util.Objects;
 import java.util.UUID;
-import java.util.UUID;
 
 public class Transaction {
     public enum TransactionStatus {
         PENDING, SETTLED, FAILED, REVERSED
     }
     public enum TransactionType {
-        DEPOSIT,
-        WITHDRAW,
-        TRANSFER_OUT,
-        TRANSFER_IN,
-        TRANSFER_EXTERNAL,
-        FEE,
-        FEE_INCOME,
-        CREDIT_DISBURSEMENT,
-        CREDIT_REPAYMENT
+        TRANSFER,
+        TRANSFER_EXTERNAL
     }
 
     private UUID id;

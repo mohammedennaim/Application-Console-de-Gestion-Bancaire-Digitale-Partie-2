@@ -27,15 +27,6 @@ public class AccountService {
         // System.out.println("Creation de account is success");
         return true;
     }
-    public boolean updateAccount(Account account){
-        if (accountImpl.findById(UUID.fromString(account.getId().toString()))){
-            accountImpl.update(UUID.fromString(account.getId().toString()));
-            // System.out.println("Modification de account is success");
-            return true;
-        }
-        // System.out.println("cette account il n'exist pas");
-        return false;
-    }
 
     public boolean deleteAccount(Account account){
         if (accountImpl.findById(UUID.fromString(account.getId().toString()))){

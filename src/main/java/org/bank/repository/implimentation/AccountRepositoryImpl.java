@@ -25,9 +25,9 @@ public class AccountRepositoryImpl implements AccountRepository {
             return null;
         }
         
-        Connection cnx = this.connection.getConnection();
         String sql = "SELECT * FROM accounts WHERE id::text = ? AND (deleted = false OR deleted IS NULL)";
-        try (PreparedStatement ps = cnx.prepareStatement(sql)) {
+        try (Connection cnx = this.connection.getConnection();
+             PreparedStatement ps = cnx.prepareStatement(sql)) {
             ps.setString(1, id.toString());
             ResultSet rs = ps.executeQuery();
 
@@ -61,7 +61,6 @@ public class AccountRepositoryImpl implements AccountRepository {
     }
 
     public boolean save(Account account) {
-        Connection cnx = this.connection.getConnection();
         String sql = """
         INSERT INTO accounts (
             id, client_id, account_type, balance, currency_code,
@@ -70,7 +69,8 @@ public class AccountRepositoryImpl implements AccountRepository {
         ) VALUES (?, ?, ?::account_type, ?, ?, ?, ?, ?, ?, ?)
         """;
 
-        try (PreparedStatement ps = cnx.prepareStatement(sql)) {
+        try (Connection cnx = this.connection.getConnection();
+             PreparedStatement ps = cnx.prepareStatement(sql)) {
             String accountId = account.getId().toString();
             if (accountId.startsWith("BK-") || accountId.startsWith("CR-") || accountId.startsWith("TX-")) {
                 ps.setString(1, accountId);
@@ -100,11 +100,13 @@ public class AccountRepositoryImpl implements AccountRepository {
 
     @Override
     public boolean deposit(UUID id, BigDecimal balance) {
+        Account acount = this.getAccountById(id);
+        BigDecimal amount = acount.getBalance();
         String sql = "UPDATE accounts SET balance = ? WHERE id = ?::uuid";
         try (Connection cnx = this.connection.getConnection();
              PreparedStatement ps = cnx.prepareStatement(sql)) {
 
-            ps.setBigDecimal(1, balance);
+            ps.setBigDecimal(1, amount.add(balance));
             ps.setObject(2, id);
             return ps.executeUpdate() > 0;
         } catch (SQLException e) {
@@ -113,18 +115,19 @@ public class AccountRepositoryImpl implements AccountRepository {
     }
 
     public boolean withdraw(UUID id, BigDecimal balance) {
+        Account acount = this.getAccountById(id);
+        BigDecimal amount = acount.getBalance();
         String sql = "UPDATE accounts SET balance = ? WHERE id = ?::uuid";
         try (Connection cnx = this.connection.getConnection();
              PreparedStatement ps = cnx.prepareStatement(sql)) {
 
-            ps.setBigDecimal(1, balance);
+            ps.setBigDecimal(1, amount.subtract(balance));
             ps.setObject(2, id);
             return ps.executeUpdate() > 0;
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
     }
-
 
     public boolean delete(UUID id){
         if (id == null) {
@@ -137,9 +140,7 @@ public class AccountRepositoryImpl implements AccountRepository {
             return false;
         }
         
-        Connection cnx = this.connection.getConnection();
-        
-        try {
+        try (Connection cnx = this.connection.getConnection()) {
             String softDeleteSql = """
             UPDATE accounts SET deleted = true, deleted_at = CURRENT_TIMESTAMP,updated_at = CURRENT_TIMESTAMP
             WHERE id = ?::uuid AND deleted = false
@@ -164,23 +165,13 @@ public class AccountRepositoryImpl implements AccountRepository {
         }
     }
 
-    @Override
-    public boolean update(UUID id) {
-        Connection cnx = this.connection.getConnection();
-
-
-        return false;
-    }
-
     public boolean restore(UUID id) {
         if (id == null) {
             System.err.println("Erreur: ID ne peut pas être null");
             return false;
         }
         
-        Connection cnx = this.connection.getConnection();
-        
-        try {
+        try (Connection cnx = this.connection.getConnection()) {
             String restoreSql = """
             UPDATE accounts SET deleted = false, deleted_at = NULL, updated_at = CURRENT_TIMESTAMP
             WHERE id = ?::uuid AND deleted = true
@@ -205,55 +196,6 @@ public class AccountRepositoryImpl implements AccountRepository {
         }
     }
 
-    public boolean updateBalance(BigDecimal amount,UUID id) {
-        try {
-            DatabaseConnection cnx = DatabaseConnection.getInstance();
-            String sql = "UPDATE accounts SET balance = ? WHERE id = ?::uuid;";
-            PreparedStatement ps = cnx.getConnection().prepareStatement(sql);
-            ps.setBigDecimal(1,amount);
-            ps.setObject(1, id.toString());
-            int rowsAffected = ps.executeUpdate();
-
-            if (rowsAffected > 0) {
-                System.out.println("balance update avec succès");
-                return true;
-            } else {
-                System.out.println("Aucun compte trouvé avec l'ID: " + id);
-                return false;
-            }
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    /**
-     * Vérifie si un compte existe
-     * @param accountId ID du compte
-     * @return true si le compte existe
-     */
-    @Override
-    public boolean accountExists(UUID accountId) {
-        String sql = "SELECT COUNT(*) FROM accounts WHERE id = ?::uuid AND deleted = false";
-        
-        try (PreparedStatement ps = connection.getConnection().prepareStatement(sql)) {
-            ps.setString(1, accountId.toString());
-            ResultSet rs = ps.executeQuery();
-            
-            if (rs.next()) {
-                return rs.getInt(1) > 0;
-            }
-            
-        } catch (SQLException e) {
-            System.err.println("Erreur lors de la vérification d'existence du compte: " + e.getMessage());
-        }
-        return false;
-    }
-
-    /**
-     * Récupère l'ID du client propriétaire d'un compte
-     * @param accountId ID du compte
-     * @return l'ID du client ou null si non trouvé
-     */
     @Override
     public UUID getClientIdByAccountId(UUID accountId) {
         String sql = "SELECT client_id FROM accounts WHERE id = ?::uuid AND deleted = false";

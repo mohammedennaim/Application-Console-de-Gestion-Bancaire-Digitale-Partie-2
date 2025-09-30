@@ -17,32 +17,31 @@ public class TransactionRepositoryImpl implements TransactionRepository {
     DatabaseConnection cnx = DatabaseConnection.getInstance();
 
     public TransactionRepositoryImpl() throws SQLException {
-
     }
 
     public boolean transfer(UUID transactionId,
-                           Transaction.TransactionType transactionType,
-                           Transaction.TransactionStatus transactionStatus,
-                           UUID sourceAccountId,
-                           UUID targetAccountId,
-                           BigDecimal amount,
-                           BigDecimal fee,
-                           Currency currency,
-                           UUID initiatedByUserId,
-                           String externalReference,
-                           String description) {
+                            Transaction.TransactionType transactionType,
+                            Transaction.TransactionStatus transactionStatus,
+                            UUID sourceAccountId,
+                            UUID targetAccountId,
+                            BigDecimal amount,
+                            BigDecimal fee,
+                            Currency currency,
+                            UUID initiatedByUserId,
+                            String externalReference,
+                            String description) {
 
+        // ✅ SQL corrigé - pas de cast vers types inexistants
         String sql = "INSERT INTO transactions (" +
                 "id, transaction_type, transaction_status, " +
                 "source_account_id, target_account_id, amount, fee, currency_code, " +
                 "initiated_by_user_id, external_reference, description, created_at, executed_at " +
-                ") VALUES (?::uuid, ?::transaction_type, ?::transaction_status, " +
-                "?::uuid, ?::uuid, ?, ?, ?, ?::uuid, ?, ?, ?, ?)";
+                ") VALUES (?::uuid, ?::transaction_type, ?::transaction_status, ?::uuid, ?::uuid, ?, ?, ?, ?::uuid, ?, ?, ?, ?)";
 
         try (PreparedStatement ps = cnx.getConnection().prepareStatement(sql)) {
             ps.setString(1, transactionId.toString());
-            ps.setString(2, transactionType.name()); // DEPOSIT, WITHDRAW, etc.
-            ps.setString(3, transactionStatus.name()); // PENDING, SETTLED, etc.
+            ps.setString(2, transactionType.name()); // ✅ String, pas enum
+            ps.setString(3, transactionStatus.name()); // ✅ String, pas enum
 
             if (sourceAccountId != null) {
                 ps.setString(4, sourceAccountId.toString());
@@ -58,11 +57,11 @@ public class TransactionRepositoryImpl implements TransactionRepository {
 
             ps.setBigDecimal(6, amount);
             ps.setBigDecimal(7, fee != null ? fee : BigDecimal.ZERO);
-            ps.setObject(8, currency); // ex: "MAD"
+            ps.setString(8, currency.getCode()); // ✅ Cohérent - getCode()
             ps.setString(9, initiatedByUserId.toString());
             ps.setString(10, externalReference);
             ps.setString(11, description);
-            ps.setTimestamp(12, Timestamp.valueOf(LocalDateTime.now())); // created_at
+            ps.setTimestamp(12, Timestamp.valueOf(LocalDateTime.now()));
 
             if (transactionStatus == Transaction.TransactionStatus.SETTLED) {
                 ps.setTimestamp(13, Timestamp.valueOf(LocalDateTime.now()));
@@ -74,7 +73,8 @@ public class TransactionRepositoryImpl implements TransactionRepository {
             return rowsAffected > 0;
 
         } catch (SQLException e) {
-            System.out.println(e.getMessage());
+            System.err.println("Erreur lors du transfert: " + e.getMessage());
+            e.printStackTrace();
             return false;
         }
     }
@@ -91,17 +91,17 @@ public class TransactionRepositoryImpl implements TransactionRepository {
                                    String externalReference,
                                    String description) {
 
+        // ✅ Même correction que transfer()
         String sql = "INSERT INTO transactions (" +
                 "id, transaction_type, transaction_status, " +
                 "source_account_id, target_account_id, amount, fee, currency_code, " +
                 "initiated_by_user_id, external_reference, description, created_at, executed_at " +
-                ") VALUES (?::uuid, ?::transaction_type, ?::transaction_status, " +
-                "?::uuid, ?::uuid, ?, ?, ?, ?::uuid, ?, ?, ?, ?)";
+                ") VALUES (?::uuid, ?::transaction_type, ?::transaction_status, ?::uuid, ?::uuid, ?, ?, ?, ?::uuid, ?, ?, ?, ?)";
 
         try (PreparedStatement ps = cnx.getConnection().prepareStatement(sql)) {
             ps.setString(1, transactionId.toString());
-            ps.setString(2, transactionType.name()); // DEPOSIT, WITHDRAW, etc.
-            ps.setString(3, transactionStatus.name()); // PENDING, SETTLED, etc.
+            ps.setString(2, transactionType.name());
+            ps.setString(3, transactionStatus.name());
 
             if (sourceAccountId != null) {
                 ps.setString(4, sourceAccountId.toString());
@@ -117,11 +117,11 @@ public class TransactionRepositoryImpl implements TransactionRepository {
 
             ps.setBigDecimal(6, amount);
             ps.setBigDecimal(7, fee != null ? fee : BigDecimal.ZERO);
-            ps.setObject(8, currency); // ex: "MAD"
+            ps.setString(8, currency.getCode());
             ps.setString(9, initiatedByUserId.toString());
             ps.setString(10, externalReference);
             ps.setString(11, description);
-            ps.setTimestamp(12, Timestamp.valueOf(LocalDateTime.now())); // created_at
+            ps.setTimestamp(12, Timestamp.valueOf(LocalDateTime.now()));
 
             if (transactionStatus == Transaction.TransactionStatus.SETTLED) {
                 ps.setTimestamp(13, Timestamp.valueOf(LocalDateTime.now()));
@@ -133,39 +133,8 @@ public class TransactionRepositoryImpl implements TransactionRepository {
             return rowsAffected > 0;
 
         } catch (SQLException e) {
-            System.out.println(e.getMessage());
-            return false;
-        }
-    }
-
-
-    public boolean delete(UUID transactionId) {
-        String sql = "UPDATE transactions SET deleted = true, deleted_at = ? WHERE id = ?::uuid AND deleted = false";
-        
-        try (PreparedStatement ps = cnx.getConnection().prepareStatement(sql)) {
-            ps.setTimestamp(1, Timestamp.valueOf(LocalDateTime.now()));
-            ps.setString(2, transactionId.toString());
-            
-            int rowsAffected = ps.executeUpdate();
-            return rowsAffected > 0;
-            
-        } catch (SQLException e) {
-            System.err.println("Erreur lors de la suppression logique de la transaction: " + e.getMessage());
-            return false;
-        }
-    }
-
-    public boolean restore(UUID transactionId) {
-        String sql = "UPDATE transactions SET deleted = false, deleted_at = null WHERE id = ?::uuid AND deleted = true";
-        
-        try (PreparedStatement ps = cnx.getConnection().prepareStatement(sql)) {
-            ps.setString(1, transactionId.toString());
-            
-            int rowsAffected = ps.executeUpdate();
-            return rowsAffected > 0;
-            
-        } catch (SQLException e) {
-            System.err.println("Erreur lors de la restauration de la transaction: " + e.getMessage());
+            System.err.println("Erreur lors du transfert externe: " + e.getMessage());
+            e.printStackTrace();
             return false;
         }
     }

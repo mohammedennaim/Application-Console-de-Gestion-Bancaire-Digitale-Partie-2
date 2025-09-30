@@ -80,7 +80,7 @@ public class TransactionService {
 
 
         if (!validateTransfer(sourceAccountId, targetAccountId)) {
-            return validateTransfer(sourceAccountId, targetAccountId);
+            return false;
         }
 
         if (account.getAccountById(sourceAccountId).getBalance().compareTo(amount) < 0){
@@ -115,7 +115,6 @@ public class TransactionService {
                             String description)
     {
         if (!validateTransfer(sourceAccountId, targetAccountId)) {
-            System.err.println("Transfert externe refusé suite à la validation");
             return false;
         }
         if (account.getAccountById(sourceAccountId).getBalance().compareTo(amount.add(fee)) < 0){

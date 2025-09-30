@@ -40,40 +40,43 @@ public class AccountService {
 
     public boolean depositAccount(UUID accountId, BigDecimal amount) {
         if (!accountImpl.findById(accountId)) {
+            System.err.println("Erreur: Le compte avec l'ID " + accountId + " n'existe pas");
+            return false;
+        }
+        if (accountImpl.getAccountById(accountId).getType().equals(Account.AccountType.CREDIT)){
+            System.err.println("Erreur: Impossible de déposer sur un compte de type CREDIT");
             return false;
         }
 
-        Account account = accountImpl.getAccountById(accountId);
-        BigDecimal newBalance = account.getBalance().add(amount);
-        account.setBalance(newBalance);
-        account.setUpdatedAt(LocalDateTime.now());
-
-        return accountImpl.deposit(accountId, newBalance);
+        boolean result = accountImpl.deposit(accountId, amount);
+        if (result) {
+            System.out.println("Dépôt de " + amount + " effectué avec succès sur le compte " + accountId);
+            System.out.println("Nouveau solde: " + accountImpl.getAccountById(accountId).getBalance());
+        } else {
+            System.err.println("Erreur lors du dépôt");
+        }
+        return result;
     }
 
     public boolean withdrawAccount(UUID accountId, BigDecimal amount) {
         if (!accountImpl.findById(accountId)) {
+            System.err.println("Erreur: Le compte avec l'ID " + accountId + " n'existe pas");
+            return false;
+        }
+        if (!accountImpl.getAccountById(accountId).getType().equals(Account.AccountType.COURANT)){
+            System.err.println("Erreur: Impossible de withdraw sur un compte de type Credit ou Epargne");
             return false;
         }
 
-        Account account = accountImpl.getAccountById(accountId);
-        BigDecimal newBalance = account.getBalance().subtract(amount);
-
-
-        if (!account.isOverdraftAllowed() && newBalance.compareTo(BigDecimal.ZERO) < 0) {
-            System.out.println("Retrait refusé : solde insuffisant !");
+        boolean result=  accountImpl.withdraw(accountId, amount);
+        if (result) {
+            System.out.println("Withdraw de " + amount + " effectué avec succès sur le compte " + accountId);
+            System.out.println("Nouveau solde: " + accountImpl.getAccountById(accountId).getBalance());
+            return true;
+        } else {
+            System.err.println("Erreur lors du dépôt");
             return false;
         }
-        if (account.isOverdraftAllowed() &&
-                newBalance.compareTo(account.getOverdraftLimit().negate()) < 0) {
-            System.out.println("Retrait refusé : limite de découvert atteinte !");
-            return false;
-        }
-
-        account.setBalance(newBalance);
-        account.setUpdatedAt(LocalDateTime.now());
-
-        return accountImpl.withdraw(accountId, newBalance);
     }
 
 }

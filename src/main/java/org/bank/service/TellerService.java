@@ -28,6 +28,14 @@ public class TellerService {
         return false;
     }
 
+    public boolean depositParTeller(UUID accountId, BigDecimal amount){
+        return accountService.depositAccount(accountId,amount);
+    }
+
+    public boolean withdrawParTeller(UUID accountId, BigDecimal amount){
+        return accountService.withdrawAccount(accountId,amount);
+    }
+
     public boolean createAccount(Account account){
         if (!accountService.findAccount(account)){
             accountService.createAccount(account);

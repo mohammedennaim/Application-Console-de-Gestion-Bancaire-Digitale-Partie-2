@@ -18,8 +18,29 @@ public class AccountService {
         return accountImpl.findById(UUID.fromString(account.getId().toString()));
     }
 
+    public Account getAccountById(String accountId){
+        if (accountImpl.findById(UUID.fromString(accountId))){
+            return accountImpl.getAccountById(UUID.fromString(accountId));
+        }
+        System.out.println("cette account il n'exist pas");
+        return null;
+    }
+
+    public boolean getAccountByClientId(UUID clientId){
+        return accountImpl.getClientIdByAccountId(clientId) != null;
+    }
+
+    public Account getCreditAccountByClientId(UUID clientId) {
+        return accountImpl.getCreditAccountByClientId(clientId);
+    }
+
+    public boolean hasCreditAccount(UUID clientId) {
+        Account creditAccount = accountImpl.getCreditAccountByClientId(clientId);
+        return creditAccount != null;
+    }
+
     public boolean createAccount(Account account){
-        if (!accountImpl.findById(UUID.fromString(account.getId().toString()))){
+        if (accountImpl.findById(UUID.fromString(account.getId().toString()))){
             // System.out.println("cette account il deja exist");
             return false;
         }

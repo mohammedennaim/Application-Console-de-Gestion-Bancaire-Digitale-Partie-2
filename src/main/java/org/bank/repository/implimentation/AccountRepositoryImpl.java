@@ -60,6 +60,49 @@ public class AccountRepositoryImpl implements AccountRepository {
         return getAccountById(id) != null;
     }
 
+    public boolean getAccountByClientId(UUID clientId) {
+        String sql = "SELECT * FROM accounts WHERE client_id::text = ? AND (deleted = false OR deleted IS NULL)";
+        try (Connection cnx = this.connection.getConnection();
+             PreparedStatement ps = cnx.prepareStatement(sql)) {
+            ps.setString(1, clientId.toString());
+            ResultSet rs = ps.executeQuery();
+
+            if (rs.next()) {
+                return true;
+            }
+
+        } catch (SQLException e) {
+            System.err.println("Erreur lors de recherche de client ID " + clientId + ": " + e.getMessage());
+        }
+        return false;
+    }
+
+    public Account getCreditAccountByClientId(UUID clientId) {
+        String sql = "SELECT * FROM accounts WHERE client_id::text = ? AND account_type = 'CREDIT' AND closed = false";
+        try (Connection cnx = this.connection.getConnection();
+             PreparedStatement ps = cnx.prepareStatement(sql)) {
+            ps.setString(1, clientId.toString());
+            ResultSet rs = ps.executeQuery();
+
+            if (rs.next()) {
+                Account account = new Account();
+                account.setId((UUID) rs.getObject("id"));
+                account.setOwnerId((UUID) rs.getObject("client_id"));
+                account.setType(Account.AccountType.valueOf(rs.getString("account_type")));
+                account.setBalance(rs.getBigDecimal("balance"));
+                account.setCurrency(Currency.fromCode(rs.getString("currency_code")));
+                account.setBankCode("BANK001"); // Valeur par défaut
+                account.setOverdraftAllowed(rs.getBoolean("overdraft_allowed"));
+                account.setOverdraftLimit(rs.getBigDecimal("overdraft_limit"));
+                return account;
+            }
+
+        } catch (SQLException e) {
+            System.err.println("Erreur lors de recherche de compte crédit pour client ID " + clientId + ": " + e.getMessage());
+        }
+        return null;
+    }
+
     public boolean save(Account account) {
         String sql = """
         INSERT INTO accounts (

@@ -20,46 +20,19 @@ public class ClientRepositoryImpl implements ClientRepository {
 
     public boolean findById(UUID id) {
         String sql = """
-        SELECT u.*, c.national_id, c.monthly_income, c.email, c.phone, c.birth_date, c.currency_code 
-        FROM users u 
-        LEFT JOIN clients c ON u.id = c.id 
-        WHERE u.id = ?::uuid AND u.role = 'CLIENT'
+        SELECT id FROM users WHERE id = ?::uuid AND role = 'CLIENT'
         """;
         try (Connection cnx = this.connection.getConnection();
              PreparedStatement ps = cnx.prepareStatement(sql)) {
             ps.setString(1, id.toString());
             ResultSet rs = ps.executeQuery();
-
-            if (rs.next()) {
-                Client client = new Client();
-                client.setId((UUID) rs.getObject("id"));
-                client.setUsername(rs.getString("username"));
-                client.setFullName(rs.getString("full_name"));
-                client.setRole(rs.getString("role"));
-                client.setActive(rs.getBoolean("active"));
-                client.setCreatedAt(rs.getTimestamp("created_at") != null ? 
-                    rs.getTimestamp("created_at").toLocalDateTime() : null);
-                client.setUpdatedAt(rs.getTimestamp("updated_at") != null ? 
-                    rs.getTimestamp("updated_at").toLocalDateTime() : null);
-                client.setLastLoginAt(rs.getTimestamp("last_login_at") != null ? 
-                    rs.getTimestamp("last_login_at").toLocalDateTime() : null);
-                
-                // Champs spécifiques aux clients
-                client.setNationalId(rs.getString("national_id"));
-                client.setMonthlyIncome(rs.getBigDecimal("monthly_income"));
-                client.setCurrency(Currency.fromCode(rs.getString("currency_code")));
-                client.setEmail(rs.getString("email"));
-                client.setPhone(rs.getString("phone"));
-                client.setBirthDate(rs.getDate("birth_date") != null ? 
-                    rs.getDate("birth_date").toLocalDate() : null);
-                
-                return true;
-            }
-
+            
+            return rs.next(); // Retourne true si le client existe
+            
         } catch (SQLException e) {
-            System.out.println(e.getMessage());
+            System.err.println("Erreur lors de la recherche du client: " + e.getMessage());
+            return false;
         }
-        return false;
     }
 
     public boolean save(Client client) {
@@ -125,11 +98,6 @@ public class ClientRepositoryImpl implements ClientRepository {
         return false;
     }
 
-    /**
-     * Récupère le nationalId d'un client par son ID
-     * @param clientId ID du client
-     * @return le nationalId ou null si non trouvé
-     */
     @Override
     public String getNationalIdByClientId(UUID clientId) {
         String sql = "SELECT national_id FROM clients WHERE id = ?::uuid";
@@ -149,11 +117,6 @@ public class ClientRepositoryImpl implements ClientRepository {
         return null;
     }
 
-    /**
-     * Récupère un client complet par son ID
-     * @param clientId ID du client
-     * @return l'objet Client ou null si non trouvé
-     */
     @Override
     public Client getClientById(UUID clientId) {
         String sql = """

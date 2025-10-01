@@ -4,8 +4,6 @@ import java.math.BigDecimal;
 import java.math.MathContext;
 import java.math.RoundingMode;
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -13,7 +11,7 @@ import java.util.UUID;
 public class Credit {
 
     public enum CreditStatus {
-        REQUESTED, APPROVED, ACTIVE, LATE, CLOSED, REJECTED
+        PENDING, APPROVED, REJECTED, ACTIVE, COMPLETED, DEFAULTED
     }
 
     public enum InterestMode {
@@ -36,7 +34,7 @@ public class Credit {
 
     public Credit() {
 //        this.schedule = new ArrayList<>();
-        this.status = CreditStatus.REQUESTED;
+        this.status = CreditStatus.PENDING;
     }
 
     public Credit(String id,

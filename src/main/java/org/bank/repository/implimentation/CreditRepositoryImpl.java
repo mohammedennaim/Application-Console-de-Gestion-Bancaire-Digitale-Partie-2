@@ -65,7 +65,7 @@ public class CreditRepositoryImpl implements CreditRepository {
             ps.setBigDecimal(3, amount);
             ps.setBigDecimal(4, fee);
             ps.setInt(5, 12);
-            ps.setString(6, Credit.CreditStatus.REQUESTED.toString());
+            ps.setString(6, Credit.CreditStatus.PENDING.toString());
             ps.setString(7, type.toString());
             ps.setString(8, clientID.toString());
             ps.setTimestamp(9, Timestamp.valueOf(LocalDateTime.now()));

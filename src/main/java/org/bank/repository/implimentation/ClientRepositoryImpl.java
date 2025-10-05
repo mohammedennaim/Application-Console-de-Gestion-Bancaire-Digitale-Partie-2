@@ -5,11 +5,14 @@ import org.bank.domain.Client;
 import org.bank.domain.Currency;
 import org.bank.repository.ClientRepository;
 
+import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Optional;
 import java.util.UUID;
+import java.time.LocalDate;
 
 public class ClientRepositoryImpl implements ClientRepository {
     private final DatabaseConnection connection;
@@ -19,20 +22,8 @@ public class ClientRepositoryImpl implements ClientRepository {
     }
 
     public boolean findById(UUID id) {
-        String sql = """
-        SELECT id FROM users WHERE id = ?::uuid AND role = 'CLIENT'
-        """;
-        try (Connection cnx = this.connection.getConnection();
-             PreparedStatement ps = cnx.prepareStatement(sql)) {
-            ps.setString(1, id.toString());
-            ResultSet rs = ps.executeQuery();
-            
-            return rs.next(); // Retourne true si le client existe
-            
-        } catch (SQLException e) {
-            System.err.println("Erreur lors de la recherche du client: " + e.getMessage());
-            return false;
-        }
+        final Optional<Client> client = Optional.ofNullable(getClientById(id));
+        return client.isPresent();
     }
 
     public boolean save(Client client) {
@@ -59,7 +50,6 @@ public class ClientRepositoryImpl implements ClientRepository {
                 System.out.println("Données utilisateur insérées pour le client : " + client.getId());
             }
             
-            // 2. Insérer dans la table clients (données spécifiques)
             String sqlClients = """
             INSERT INTO clients (
                 id, username, full_name, role, active,
@@ -93,14 +83,83 @@ public class ClientRepositoryImpl implements ClientRepository {
             return true;
             
         } catch (SQLException e) {
-           e.printStackTrace();
+           System.out.println(e.getMessage());
         }
         return false;
     }
 
+    public boolean update(Client client) {
+        try (Connection cnx = this.connection.getConnection()) {
+            String sqlUsers = """
+            UPDATE users 
+            SET username = ?, full_name = ?, updated_at = ?
+            WHERE id = ?::uuid
+            """;
+            
+            try (PreparedStatement psUsers = cnx.prepareStatement(sqlUsers)) {
+                psUsers.setString(1, client.getUsername());
+                psUsers.setString(2, client.getFullName());
+                psUsers.setObject(3, client.getUpdatedAt());
+                psUsers.setString(4, client.getId().toString());
+                
+                psUsers.executeUpdate();
+                System.out.println("Données utilisateur mises à jour pour le client : " + client.getId());
+            }
+            
+            String sqlClients = """
+            UPDATE clients 
+            SET username = ?, full_name = ?, national_id = ?, 
+                monthly_income = ?, email = ?, phone = ?, 
+                birth_date = ?, updated_at = ?
+            WHERE id = ?::uuid
+            """;
+            try (PreparedStatement psClients = cnx.prepareStatement(sqlClients)) {
+                psClients.setString(1, client.getUsername());
+                psClients.setString(2, client.getFullName());
+                psClients.setString(3, client.getNationalId());
+                psClients.setBigDecimal(4, client.getMonthlyIncome());
+                psClients.setString(5, client.getEmail());
+                psClients.setString(6, client.getPhone());
+                psClients.setObject(7, client.getBirthDate());
+                psClients.setObject(8, client.getUpdatedAt());
+                psClients.setString(9, client.getId().toString());
+                
+                int rowsAffected = psClients.executeUpdate();
+                System.out.println("client mises à jour avec succès : " + client.getId());
+                return rowsAffected > 0;
+            }
+            
+        } catch (SQLException e) {
+            System.err.println("Erreur lors de la mise à jour du client: " + e.getMessage());
+        }
+        return false;
+    }
+    public boolean delete(UUID id) {
+        String sql = "UPDATE clients SET active = false, updated_at = ? WHERE id = ?::uuid";
+        try (PreparedStatement ps = connection.getConnection().prepareStatement(sql)) {
+            ps.setTimestamp(1, java.sql.Timestamp.valueOf(java.time.LocalDateTime.now()));
+            ps.setString(2, id.toString());
+            
+            int rowsAffected = ps.executeUpdate();
+            return rowsAffected > 0;
+            
+        } catch (SQLException e) {
+            System.err.println("Erreur lors de la suppression du client: " + e.getMessage());
+        }
+        return false;
+    }
     @Override
     public String getNationalIdByClientId(UUID clientId) {
-        String sql = "SELECT national_id FROM clients WHERE id = ?::uuid";
+        if (clientId == null) {
+            System.err.println("Erreur: clientId ne peut pas être null");
+        }
+        
+        String sql = """
+        SELECT c.national_id
+        FROM users u
+        LEFT JOIN clients c ON u.id = c.id
+        WHERE u.id = ?::uuid AND u.role = 'CLIENT'
+        """;
         
         try (Connection cnx = this.connection.getConnection();
              PreparedStatement ps = cnx.prepareStatement(sql)) {
@@ -114,7 +173,7 @@ public class ClientRepositoryImpl implements ClientRepository {
         } catch (SQLException e) {
             System.err.println("Erreur lors de la récupération du nationalId: " + e.getMessage());
         }
-        return null;
+        return "DEFAULT-ID-UNKNOWN";
     }
 
     @Override
@@ -143,16 +202,14 @@ public class ClientRepositoryImpl implements ClientRepository {
                 client.setUpdatedAt(rs.getTimestamp("updated_at") != null ? 
                     rs.getTimestamp("updated_at").toLocalDateTime() : null);
                 client.setLastLoginAt(rs.getTimestamp("last_login_at") != null ? 
-                    rs.getTimestamp("last_login_at").toLocalDateTime() : null);
-                
-                // Champs spécifiques aux clients
-                client.setNationalId(rs.getString("national_id"));
-                client.setMonthlyIncome(rs.getBigDecimal("monthly_income"));
-                client.setCurrency(Currency.fromCode(rs.getString("currency_code")));
-                client.setEmail(rs.getString("email"));
-                client.setPhone(rs.getString("phone"));
+                    rs.getTimestamp("last_login_at").toLocalDateTime() : null);       
+                client.setNationalId(rs.getString("national_id") != null ? rs.getString("national_id") : "DEFAULT-ID");
+                client.setMonthlyIncome(rs.getBigDecimal("monthly_income") != null ? rs.getBigDecimal("monthly_income") : new BigDecimal("5000.00"));
+                client.setCurrency(rs.getString("currency_code") != null ? Currency.fromCode(rs.getString("currency_code")) : Currency.MAD);
+                client.setEmail(rs.getString("email") != null ? rs.getString("email") : "client@example.com");
+                client.setPhone(rs.getString("phone") != null ? rs.getString("phone") : "+212600000000");
                 client.setBirthDate(rs.getDate("birth_date") != null ? 
-                    rs.getDate("birth_date").toLocalDate() : null);
+                    rs.getDate("birth_date").toLocalDate() : LocalDate.of(1990, 1, 1));
                 
                 return client;
             }

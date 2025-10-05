@@ -1,4 +1,6 @@
 package org.bank.repository.implimentation;
 
-public class HistoriqueRepositoryImpl {
+import org.bank.repository.HistoriqueRepository;
+
+public class HistoriqueRepositoryImpl implements HistoriqueRepository {
 }

@@ -12,12 +12,4 @@ public class TellerRepositoryImpl implements TellerRepository {
     public TellerRepositoryImpl() throws SQLException {
     }
 
-    public boolean findClientParTeller(Client client){
-        return clientImpl.findById(UUID.fromString(client.getId().toString()));
-    }
-
-    public boolean createClient(Client client){
-        clientImpl.save(client);
-        return true;
-    }
 }

@@ -52,4 +52,52 @@ public class DatabaseConnection {
         }
         return connection;
     }
+
+    /**
+     * Ferme la connexion à la base de données de manière sécurisée
+     */
+    public void closeConnection() {
+        try {
+            if (connection != null && !connection.isClosed()) {
+                connection.close();
+                System.out.println("🔌 Connexion PostgreSQL fermée correctement.");
+            }
+        } catch (SQLException e) {
+            System.err.println("⚠️ Erreur lors de la fermeture de la connexion: " + e.getMessage());
+        } finally {
+            connection = null;
+            instance = null; // Réinitialiser l'instance pour permettre une nouvelle création
+        }
+    }
+
+    /**
+     * Méthode pour nettoyer les ressources et forcer la fermeture
+     * Utile pour éviter les threads qui traînent
+     */
+    public static void cleanup() {
+        if (instance != null) {
+            instance.closeConnection();
+        }
+        
+        // Forcer l'arrêt des threads PostgreSQL de nettoyage
+        try {
+            // Enregistrer le driver pour le désenregistrer
+            java.sql.DriverManager.getDrivers().asIterator().forEachRemaining(driver -> {
+                try {
+                    if (driver.getClass().getName().contains("postgresql")) {
+                        java.sql.DriverManager.deregisterDriver(driver);
+                        System.out.println("🔌 Driver PostgreSQL désenregistré: " + driver.getClass().getName());
+                    }
+                } catch (Exception e) {
+                    System.err.println("⚠️ Erreur désenregistrement driver: " + e.getMessage());
+                }
+            });
+        } catch (Exception e) {
+            System.err.println("⚠️ Erreur lors du nettoyage des drivers: " + e.getMessage());
+        }
+        
+        // Forcer le garbage collection pour nettoyer les références
+        System.gc();
+        System.runFinalization();
+    }
 }

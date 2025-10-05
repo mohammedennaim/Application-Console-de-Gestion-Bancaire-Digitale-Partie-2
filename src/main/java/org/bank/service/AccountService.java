@@ -5,13 +5,17 @@ import org.bank.repository.implimentation.AccountRepositoryImpl;
 
 import java.math.BigDecimal;
 import java.sql.SQLException;
-import java.time.LocalDateTime;
 import java.util.UUID;
 
 public class AccountService {
     AccountRepositoryImpl accountImpl = new AccountRepositoryImpl();
 
     public AccountService() throws SQLException {
+    }
+    
+    // Getter pour accéder au repository depuis d'autres services
+    public AccountRepositoryImpl getAccountRepository() {
+        return accountImpl;
     }
 
     public boolean findAccount(Account account){
@@ -27,7 +31,7 @@ public class AccountService {
     }
 
     public boolean getAccountByClientId(UUID clientId){
-        return accountImpl.getClientIdByAccountId(clientId) != null;
+        return accountImpl.getAccountByClientId(clientId) != null;
     }
 
     public Account getCreditAccountByClientId(UUID clientId) {
@@ -39,23 +43,23 @@ public class AccountService {
         return creditAccount != null;
     }
 
-    public boolean createAccount(Account account){
+    public void createAccount(Account account){
+
         if (accountImpl.findById(UUID.fromString(account.getId().toString()))){
-            // System.out.println("cette account il deja exist");
-            return false;
+            return;
+        }
+        if (account.getType() == Account.AccountType.CREDIT){
+            accountImpl.createAccountCredit(account);
+            return;
         }
         accountImpl.save(account);
-        // System.out.println("Creation de account is success");
-        return true;
     }
 
     public boolean deleteAccount(Account account){
         if (accountImpl.findById(UUID.fromString(account.getId().toString()))){
             accountImpl.delete(UUID.fromString(account.getId().toString()));
-            // System.out.println("Suppression de account is success");
             return true;
         }
-        // System.out.println("cette account il n'exist pas");
         return false;
     }
 
@@ -95,7 +99,7 @@ public class AccountService {
             System.out.println("Nouveau solde: " + accountImpl.getAccountById(accountId).getBalance());
             return true;
         } else {
-            System.err.println("Erreur lors du dépôt");
+            System.err.println("Erreur lors du withdraw");
             return false;
         }
     }

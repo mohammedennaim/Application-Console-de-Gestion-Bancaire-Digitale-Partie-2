@@ -7,8 +7,8 @@ import org.bank.domain.Client;
 public interface ClientRepository {
     boolean findById(UUID id);
     boolean save(Client client);
-    
-    // Nouvelles méthodes pour la validation des transferts
+    boolean update(Client client);
+    boolean delete(UUID id);
     String getNationalIdByClientId(UUID clientId);
     Client getClientById(UUID clientId);
 }

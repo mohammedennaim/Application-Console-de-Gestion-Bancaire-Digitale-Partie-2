@@ -19,19 +19,20 @@ public class TransactionRepositoryImpl implements TransactionRepository {
     public TransactionRepositoryImpl() throws SQLException {
     }
 
-    public boolean transfer(UUID transactionId,
-                            Transaction.TransactionType transactionType,
-                            Transaction.TransactionStatus transactionStatus,
-                            UUID sourceAccountId,
-                            UUID targetAccountId,
-                            BigDecimal amount,
-                            BigDecimal fee,
-                            Currency currency,
-                            UUID initiatedByUserId,
-                            String externalReference,
-                            String description) {
+    public boolean transfer(
+        UUID transactionId,
+        Transaction.TransactionType transactionType,
+        Transaction.TransactionStatus transactionStatus,
+        UUID sourceAccountId,
+        UUID targetAccountId,
+        BigDecimal amount,
+        BigDecimal fee,
+        Currency currency,
+        UUID initiatedByUserId,
+        String externalReference,
+        String description
+        ) {
 
-        // ✅ SQL corrigé - pas de cast vers types inexistants
         String sql = "INSERT INTO transactions (" +
                 "id, transaction_type, transaction_status, " +
                 "source_account_id, target_account_id, amount, fee, currency_code, " +
@@ -40,8 +41,8 @@ public class TransactionRepositoryImpl implements TransactionRepository {
 
         try (PreparedStatement ps = cnx.getConnection().prepareStatement(sql)) {
             ps.setString(1, transactionId.toString());
-            ps.setString(2, transactionType.name()); // ✅ String, pas enum
-            ps.setString(3, transactionStatus.name()); // ✅ String, pas enum
+            ps.setString(2, transactionType.name()); 
+            ps.setString(3, transactionStatus.name());
 
             if (sourceAccountId != null) {
                 ps.setString(4, sourceAccountId.toString());
@@ -57,7 +58,7 @@ public class TransactionRepositoryImpl implements TransactionRepository {
 
             ps.setBigDecimal(6, amount);
             ps.setBigDecimal(7, fee != null ? fee : BigDecimal.ZERO);
-            ps.setString(8, currency.getCode()); // ✅ Cohérent - getCode()
+            ps.setString(8, currency.getCode());
             ps.setString(9, initiatedByUserId.toString());
             ps.setString(10, externalReference);
             ps.setString(11, description);
@@ -79,19 +80,20 @@ public class TransactionRepositoryImpl implements TransactionRepository {
         }
     }
 
-    public boolean transferExterne(UUID transactionId,
-                                   Transaction.TransactionType transactionType,
-                                   Transaction.TransactionStatus transactionStatus,
-                                   UUID sourceAccountId,
-                                   UUID targetAccountId,
-                                   BigDecimal amount,
-                                   BigDecimal fee,
-                                   Currency currency,
-                                   UUID initiatedByUserId,
-                                   String externalReference,
-                                   String description) {
+    public boolean transferExterne(
+        UUID transactionId,
+        Transaction.TransactionType transactionType,
+        Transaction.TransactionStatus transactionStatus,
+        UUID sourceAccountId,
+        UUID targetAccountId,
+        BigDecimal amount,
+        BigDecimal fee,
+        Currency currency,
+        UUID initiatedByUserId,
+        String externalReference,
+        String description
+        ) {
 
-        // ✅ Même correction que transfer()
         String sql = "INSERT INTO transactions (" +
                 "id, transaction_type, transaction_status, " +
                 "source_account_id, target_account_id, amount, fee, currency_code, " +

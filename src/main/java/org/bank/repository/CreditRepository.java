@@ -7,4 +7,6 @@ import java.util.UUID;
 
 public interface CreditRepository {
     boolean credit(BigDecimal amount, UUID clientID, UUID accountID, BigDecimal fee, Credit.InterestMode type);
+    boolean update(UUID accountId,BigDecimal amount);
+    boolean delete(UUID creditId);
 }

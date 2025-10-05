@@ -12,9 +12,7 @@ public interface AccountRepository {
     boolean delete(UUID id);
     boolean deposit(UUID id, BigDecimal balance);
     boolean withdraw(UUID id, BigDecimal balance);
-    
-    // Nouvelles méthodes pour la validation des transferts
     Account getAccountById(UUID accountId);
-    UUID getClientIdByAccountId(UUID accountId);
+    Client getClientByAccountId(UUID accountId);
 }
 

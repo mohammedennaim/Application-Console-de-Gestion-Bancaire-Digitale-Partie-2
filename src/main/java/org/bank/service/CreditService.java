@@ -23,40 +23,37 @@ public class CreditService {
         this.clientImpl = new ClientRepositoryImpl();
     }
 
-    // public boolean createCredit(BigDecimal amount, UUID clientID, BigDecimal interestRate, Credit.InterestMode type) {
-    //     try {
-    //         if (!clientImpl.findById(clientID)) {
-    //             System.err.println("Erreur: Le client avec l'ID " + clientID + " n'existe pas");
-    //             return false;
-    //         }
+     public boolean createCredit(BigDecimal amount, UUID clientID, BigDecimal interestRate, Credit.InterestMode type) {
+         try {
+             if (!clientImpl.findById(clientID)) {
+                 System.err.println("Erreur: Le client avec l'ID " + clientID + " n'existe pas");
+                 return false;
+             }
 
-    //         if (amount.compareTo(clientImpl.getClientById(clientID).getMonthlyIncome().multiply(BigDecimal.valueOf(0.4))) > 0) {
-    //             System.err.println("Erreur: Le montant pour un crédit dépasse 40% du salaire client");
-    //             return false;
-    //         }
+             if (amount.compareTo(clientImpl.getClientById(clientID).getMonthlyIncome().multiply(BigDecimal.valueOf(0.4))) > 0) {
+                 System.err.println("Erreur: Le montant pour un crédit dépasse 40% du salaire client");
+                 return false;
+             }
 
-    //         Account creditAccount = accountService.getCreditAccountByClientId(clientID);
+             Account creditAccount = accountService.getCreditAccountByClientId(clientID);
             
-    //         if (creditAccount == null) {
-    //             creditAccount = new Account(
-    //                 UUID.randomUUID(),clientID,Account.AccountType.CREDIT,BigDecimal.ZERO,Currency.MAD,LocalDateTime.now()
-    //             );
+             if (creditAccount == null) {
+                 creditAccount = new Account(
+                     UUID.randomUUID(),clientID,Account.AccountType.CREDIT,BigDecimal.ZERO,Currency.MAD,LocalDateTime.now()
+                 );
                 
-    //             accountService.createAccount(creditAccount);
-    //             System.out.println("Nouveau compte de crédit créé avec succès pour le client: " + clientID);
-    //         }
-    //         return true;
+                 accountService.createAccount(creditAccount);
+                 System.out.println("Nouveau compte de crédit créé avec succès pour le client: " + clientID);
+             }
+             return true;
 
-    //     } catch (Exception e) {
-    //         System.err.println("Erreur inattendue lors de la création du crédit: " + e.getMessage());
-    //         return false;
-    //     }
-    // }
+         } catch (Exception e) {
+             System.err.println("Erreur inattendue lors de la création du crédit: " + e.getMessage());
+             return false;
+         }
+     }
 
-    // /**
-    //  * Méthode pour créer uniquement l'entrée crédit pour un compte existant
-    //  * Utilisée par AccountService pour éviter la récursion infinie
-    //  */
+
     public boolean createCreditEntry(UUID accountId, UUID clientId, BigDecimal interestRate, Credit.InterestMode type) {
         try {
             this.creditImpl.credit(BigDecimal.ZERO, clientId, accountId, interestRate, type);

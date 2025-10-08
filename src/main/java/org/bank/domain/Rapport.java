@@ -7,7 +7,7 @@ import java.util.List;
 
 public class Rapport {
     private String title;
-    private String period; // ex: "2025-01-01..2025-01-31"
+    private String period;
     private LocalDateTime generatedAt;
     private Statistique stats;
     private List<String> lines;

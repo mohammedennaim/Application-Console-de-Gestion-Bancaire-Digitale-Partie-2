@@ -127,9 +127,7 @@ public class TellerController {
                 System.err.println("Le montant doit être positif");
                 return false;
             }
-            
-            // Récupérer l'ID du client propriétaire du compte source
-            // pour l'utiliser comme initiated_by_user_id (au lieu du teller)
+
             UUID sourceClientId = tellerService.getClientIdByAccountId(sourceAccountId);
             if (sourceClientId == null) {
                 System.err.println("Impossible de trouver le client propriétaire du compte source");
@@ -144,8 +142,8 @@ public class TellerController {
                 targetAccountId,
                 amount,
                 Currency.MAD,
-                sourceClientId, // Utiliser l'ID du client au lieu du teller
-                "TELLER_" + System.currentTimeMillis(),
+                sourceClientId,
+                "TELLER_" + tellerId,
                 description
             );
         } catch (Exception e) {
@@ -161,9 +159,7 @@ public class TellerController {
                 System.err.println("Le montant doit être positif");
                 return false;
             }
-            
-            // Récupérer l'ID du client propriétaire du compte source
-            // pour l'utiliser comme initiated_by_user_id (au lieu du teller)
+
             UUID sourceClientId = tellerService.getClientIdByAccountId(sourceAccountId);
             if (sourceClientId == null) {
                 System.err.println("Impossible de trouver le client propriétaire du compte source");
@@ -178,8 +174,8 @@ public class TellerController {
                 targetAccountId,
                 amount,
                 Currency.MAD,
-                sourceClientId, // Utiliser l'ID du client au lieu du teller
-                "EXT_TELLER_" + System.currentTimeMillis(),
+                sourceClientId,
+                "EXT_TELLER_" + tellerId,
                 description
             );
         } catch (Exception e) {

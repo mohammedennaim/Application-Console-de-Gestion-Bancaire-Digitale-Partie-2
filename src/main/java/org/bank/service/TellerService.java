@@ -19,11 +19,8 @@ public class TellerService {
     public boolean createClient(Client client){
         if (!this.client.findById(client.getId())){
             this.client.save(client);
-//            System.out.println("Creation de client is success");
             return true;
         }
-
-//        System.out.println("cette client il deja exist");
         return false;
     }
 
@@ -52,10 +49,8 @@ public class TellerService {
     public boolean createAccount(Account account){
         if (!accountService.findAccount(account)){
             accountService.createAccount(account);
-//            System.out.println("Creation de account is success");
             return true;
         }
-//        System.out.println("cette account il deja exist");
         return false;
     }
 
@@ -111,10 +106,7 @@ public class TellerService {
             description
         );
     }
-    
-    /**
-     * Récupère l'ID du client propriétaire d'un compte
-     */
+
     public UUID getClientIdByAccountId(UUID accountId) {
         try {
             Client client = accountService.getAccountRepository().getClientByAccountId(accountId);

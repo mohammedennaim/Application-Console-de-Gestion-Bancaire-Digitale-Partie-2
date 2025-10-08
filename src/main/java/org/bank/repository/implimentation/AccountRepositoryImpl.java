@@ -130,7 +130,7 @@ public class AccountRepositoryImpl implements AccountRepository {
             ps.setObject(7, account.getOpenedAt());
             ps.setObject(8, account.getClosedAt());
 
-            ps.executeQuery();
+            ps.executeUpdate();
 
             System.out.println("Compte inséré avec succès : " + account.getId());
             return true;
@@ -139,25 +139,6 @@ public class AccountRepositoryImpl implements AccountRepository {
             System.out.println(e.getMessage());
         }
         return false;
-    }
-
-    public void createAccountCredit(Account account){
-        final Account accountCredit = getCreditAccountByClientId(account.getOwnerId());
-        final boolean isTypeCredit = account.getType().equals(Account.AccountType.CREDIT);
-        final boolean isOwnerWithoutCredit = accountCredit == null;
-
-        if (isTypeCredit) {
-            if (isOwnerWithoutCredit) {
-                save(account);
-                creditRepository.credit(account.getBalance(), account.getOwnerId(), account.getId(), BigDecimal.valueOf(0.04), Credit.InterestMode.SIMPLE);
-                account.setBalance(BigDecimal.ZERO);
-                System.out.println("Crédit créé pour le compte : " + account.getId());
-                return;
-            }
-
-            deposit(accountCredit.getId(),account.getBalance());
-            System.out.println("Crédit modifier pour le compte : " + account.getId());
-        }
     }
 
     @Override
@@ -192,73 +173,6 @@ public class AccountRepositoryImpl implements AccountRepository {
             return ps.executeUpdate() > 0;
         } catch (SQLException e) {
             throw new RuntimeException(e);
-        }
-    }
-
-    public boolean delete(UUID id) {
-        if (id == null) {
-            System.err.println("Erreur: ID ne peut pas être null");
-            return false;
-        }
-
-        if (!findById(id)) {
-            System.out.println("Aucun compte trouvé avec l'ID: " + id);
-            return false;
-        }
-
-        try (Connection cnx = this.connection.getConnection()) {
-            String softDeleteSql = """
-                    UPDATE accounts SET deleted = true, deleted_at = CURRENT_TIMESTAMP,updated_at = CURRENT_TIMESTAMP
-                    WHERE id = ?::uuid AND deleted = false
-                    """;
-
-            try (PreparedStatement ps = cnx.prepareStatement(softDeleteSql)) {
-                ps.setString(1, id.toString());
-                int rowsAffected = ps.executeUpdate();
-
-                if (rowsAffected > 0) {
-                    System.out.println("Compte marqué comme supprimé (soft delete) : " + id);
-                    System.out.println("   → Les données sont préservées pour l'historique");
-                    return true;
-                } else {
-                    System.out.println("Le compte est déjà marqué comme supprimé : " + id);
-                    return false;
-                }
-            }
-        } catch (SQLException e) {
-            System.err.println("Erreur lors de la suppression du compte: " + e.getMessage());
-            return false;
-        }
-    }
-
-    public boolean restore(UUID id) {
-        if (id == null) {
-            System.err.println("Erreur: ID ne peut pas être null");
-            return false;
-        }
-
-        try (Connection cnx = this.connection.getConnection()) {
-            String restoreSql = """
-                    UPDATE accounts SET deleted = false, deleted_at = NULL, updated_at = CURRENT_TIMESTAMP
-                    WHERE id = ?::uuid AND deleted = true
-                    """;
-
-            try (PreparedStatement ps = cnx.prepareStatement(restoreSql)) {
-                ps.setString(1, id.toString());
-                int rowsAffected = ps.executeUpdate();
-
-                if (rowsAffected > 0) {
-                    System.out.println("Compte restauré avec succès");
-                    return true;
-                } else {
-                    System.out.println("Aucun compte supprimé trouvé avec l'ID: " + id);
-                    return false;
-                }
-            }
-
-        } catch (SQLException e) {
-            System.err.println("Erreur lors de la restauration du compte: " + e.getMessage());
-            return false;
         }
     }
 

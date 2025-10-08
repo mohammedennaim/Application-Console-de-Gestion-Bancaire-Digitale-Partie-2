@@ -9,7 +9,7 @@ public class Client {
     private UUID id;
     private String username;
     private String fullName;
-    private String role; // Toujours "CLIENT"
+    private String role;
     private boolean active;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
@@ -24,7 +24,7 @@ public class Client {
     public Client() {
         this.active = true;
         this.role = "CLIENT";
-        this.currency = Currency.MAD; // Devise par défaut: Dirham marocain
+        this.currency = Currency.MAD;
         this.createdAt = LocalDateTime.now();
         this.updatedAt = this.createdAt;
     }

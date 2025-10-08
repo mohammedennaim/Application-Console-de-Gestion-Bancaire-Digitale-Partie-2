@@ -9,7 +9,6 @@ import java.util.UUID;
 public interface AccountRepository {
     boolean save(Account account);
     boolean findById(UUID id);
-    boolean delete(UUID id);
     boolean deposit(UUID id, BigDecimal balance);
     boolean withdraw(UUID id, BigDecimal balance);
     Account getAccountById(UUID accountId);

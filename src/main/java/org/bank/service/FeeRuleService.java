@@ -9,7 +9,7 @@ public class FeeRuleService {
 
     public FeeRuleService() throws SQLException {
     }
-    public boolean addFeeRuleParTransaction(UUID accountID, BigDecimal amount){
-        return fee.addFeeRuleParTransaction(accountID, amount);
+    public void addFeeRuleParTransaction(UUID accountID, BigDecimal amount){
+        fee.addFeeRuleParTransaction(accountID, amount);
     }
 }

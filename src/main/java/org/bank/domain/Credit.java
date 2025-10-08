@@ -1,8 +1,6 @@
 package org.bank.domain;
 
 import java.math.BigDecimal;
-import java.math.MathContext;
-import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.util.Objects;
 import java.util.UUID;
@@ -15,25 +13,21 @@ public class Credit {
     }
 
     public enum InterestMode {
-        SIMPLE, COMPOUND // SIMPLE: intérêts linéaires, COMPOUND: amortissement (taux mensuel)
+        SIMPLE, COMPOUND
     }
 
-    public static final MathContext MC = new MathContext(20, RoundingMode.HALF_UP);
-
-    private String id; // ex: CR-2025-0001
+    private String id;
     private UUID clientId;
-    private String linkedAccountId; // compte débité/crédité automatiquement
-    private BigDecimal principal; // capital
-    private BigDecimal annualRate; // 8% => 0.08
-    private int durationMonths; // durée en mois
+    private String linkedAccountId;
+    private BigDecimal principal;
+    private BigDecimal annualRate;
+    private int durationMonths;
     private InterestMode interestMode;
     private CreditStatus status;
-    private BigDecimal penaltyRate; // pénalité mensuelle sur échéance en retard (ex: 0.01 = 1%)
-    private LocalDate startDate; // date de départ de l'échéancier
-//    private final List<T> schedule; // échéancier
+    private BigDecimal penaltyRate;
+    private LocalDate startDate;
 
     public Credit() {
-//        this.schedule = new ArrayList<>();
         this.status = CreditStatus.PENDING;
     }
 
@@ -55,8 +49,7 @@ public class Credit {
         this.interestMode = interestMode == null ? InterestMode.COMPOUND : interestMode;
         this.penaltyRate = penaltyRate == null ? BigDecimal.ZERO : penaltyRate;
         this.startDate = startDate == null ? LocalDate.now() : startDate;
-//        this.schedule = new ArrayList<>();
-        this.status = CreditStatus.APPROVED; // typiquement après validation manager
+        this.status = CreditStatus.APPROVED;
     }
 
 
@@ -100,9 +93,6 @@ public class Credit {
         return startDate;
     }
 
-//    public List<Installment> getSchedule() {
-//        return schedule;
-//    }
 
     public void setStatus(CreditStatus status) {
         this.status = status;

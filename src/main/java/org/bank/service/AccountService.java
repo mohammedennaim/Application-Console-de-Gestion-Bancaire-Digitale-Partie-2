@@ -1,7 +1,10 @@
 package org.bank.service;
 
 import org.bank.domain.Account;
+import org.bank.domain.Credit;
 import org.bank.repository.implimentation.AccountRepositoryImpl;
+import org.bank.repository.implimentation.ClientRepositoryImpl;
+import org.bank.repository.implimentation.CreditRepositoryImpl;
 
 import java.math.BigDecimal;
 import java.sql.SQLException;
@@ -9,11 +12,11 @@ import java.util.UUID;
 
 public class AccountService {
     AccountRepositoryImpl accountImpl = new AccountRepositoryImpl();
+    CreditRepositoryImpl creditRepository = new CreditRepositoryImpl();
 
     public AccountService() throws SQLException {
     }
-    
-    // Getter pour accéder au repository depuis d'autres services
+
     public AccountRepositoryImpl getAccountRepository() {
         return accountImpl;
     }
@@ -48,19 +51,26 @@ public class AccountService {
         if (accountImpl.findById(UUID.fromString(account.getId().toString()))){
             return;
         }
-        if (account.getType() == Account.AccountType.CREDIT){
-            accountImpl.createAccountCredit(account);
+
+        final Account accountCredit = getCreditAccountByClientId(account.getOwnerId());
+        final boolean isTypeCredit = account.getType().equals(Account.AccountType.CREDIT);
+        final boolean isOwnerWithoutCredit = accountCredit == null;
+
+        if (isTypeCredit) {
+            if (isOwnerWithoutCredit) {
+                accountImpl.save(account);
+                creditRepository.credit(account.getBalance(), account.getOwnerId(), account.getId(), BigDecimal.valueOf(0.04), Credit.InterestMode.SIMPLE);
+                account.setBalance(BigDecimal.ZERO);
+                System.out.println("Crédit créé pour le compte : " + account.getId());
+                return;
+            }
+
+            accountImpl.deposit(accountCredit.getId(),account.getBalance());
+            System.out.println("Crédit modifier pour le compte : " + account.getId());
             return;
         }
-        accountImpl.save(account);
-    }
 
-    public boolean deleteAccount(Account account){
-        if (accountImpl.findById(UUID.fromString(account.getId().toString()))){
-            accountImpl.delete(UUID.fromString(account.getId().toString()));
-            return true;
-        }
-        return false;
+        accountImpl.save(account);
     }
 
     public boolean depositAccount(UUID accountId, BigDecimal amount) {

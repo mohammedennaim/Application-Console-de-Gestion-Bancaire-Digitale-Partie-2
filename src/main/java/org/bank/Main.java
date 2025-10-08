@@ -9,7 +9,6 @@ public class Main {
         System.out.println("=".repeat(50));
         
         try {
-            // Lancement de l'interface guichetier
             UiTeller uiTeller = new UiTeller();
             uiTeller.showMenu();
             uiTeller.fermer();
